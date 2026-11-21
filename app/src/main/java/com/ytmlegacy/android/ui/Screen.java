@@ -51,6 +51,17 @@ public abstract class Screen {
 
     public void onLibraryChanged() { }
 
+    /** First id free for a screen's own entries in the hardware-menu panel. */
+    public static final int MENU_SCREEN = 100;
+
+    /** Adds this screen's entries to the hardware-menu panel. */
+    public void addMenu(android.view.Menu menu) { }
+
+    /** Handles one of this screen's menu entries. */
+    public boolean onMenu(int id) {
+        return false;
+    }
+
     /** Search screens show the search field in the action bar. */
     public boolean isSearch() {
         return false;

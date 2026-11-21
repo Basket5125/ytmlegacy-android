@@ -238,6 +238,23 @@ public final class BrowseScreen extends ListScreen {
         });
     }
 
+    @Override
+    public void addMenu(android.view.Menu menu) {
+        super.addMenu(menu);
+        if (page != null && (isCollection() || isArtist())) {
+            menu.add(0, MENU_SCREEN + 1, 21, R.string.menu_options).setIcon(R.drawable.ic_more);
+        }
+    }
+
+    @Override
+    public boolean onMenu(int id) {
+        if (id == MENU_SCREEN + 1 && page != null) {
+            act.actions().itemMenu(asItem(), page);
+            return true;
+        }
+        return super.onMenu(id);
+    }
+
     private void bindSave(ImageButton save) {
         boolean saved = Library.get(act).isSaved(browseId);
         save.setImageResource(saved ? R.drawable.ic_bookmark : R.drawable.ic_bookmark_border);

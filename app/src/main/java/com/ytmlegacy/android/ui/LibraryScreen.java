@@ -106,6 +106,25 @@ public final class LibraryScreen extends ListScreen {
     }
 
     @Override
+    public void addMenu(android.view.Menu menu) {
+        menu.add(0, MENU_SCREEN + 1, 21, R.string.new_playlist).setIcon(R.drawable.ic_add);
+        menu.add(0, MENU_SCREEN + 2, 22, R.string.import_csv).setIcon(R.drawable.ic_import);
+    }
+
+    @Override
+    public boolean onMenu(int id) {
+        if (id == MENU_SCREEN + 1) {
+            act.actions().newPlaylist(null);
+            return true;
+        }
+        if (id == MENU_SCREEN + 2) {
+            act.csv().pickImport();
+            return true;
+        }
+        return false;
+    }
+
+    @Override
     public void onLibraryChanged() {
         if (!isDestroyed()) reload();
     }

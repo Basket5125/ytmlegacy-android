@@ -273,6 +273,11 @@ public final class PlayerService extends Service implements Remote.Commands {
     }
 
     @Override
+    protected void attachBaseContext(Context base) {
+        super.attachBaseContext(com.ytmlegacy.android.data.Lang.wrap(base));
+    }
+
+    @Override
     public IBinder onBind(Intent intent) {
         return binder;
     }

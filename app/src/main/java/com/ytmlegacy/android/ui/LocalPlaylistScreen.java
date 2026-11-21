@@ -91,6 +91,21 @@ public final class LocalPlaylistScreen extends ListScreen {
     }
 
     @Override
+    public void addMenu(android.view.Menu menu) {
+        super.addMenu(menu);
+        menu.add(0, MENU_SCREEN + 1, 21, R.string.menu_options).setIcon(R.drawable.ic_more);
+    }
+
+    @Override
+    public boolean onMenu(int id) {
+        if (id == MENU_SCREEN + 1) {
+            act.actions().localPlaylistMenu(this.id);
+            return true;
+        }
+        return super.onMenu(id);
+    }
+
+    @Override
     public void onRowMenu(Rows.Row row) {
         if (row.song() != null) act.actions().songMenu(row.song(), id, row.index);
     }

@@ -1,72 +1,89 @@
 # YTM Legacy (Android)
 
-Lekki klient YouTube Music dla Androida **2.3 i nowszych**, w stylu Holo z ery Androida 4.
-Działa bez konta, bez reklam i bez śledzenia. Metadane pochodzą z InnerTube (WEB_REMIX),
-a dźwięk prosto z serwerów YouTube (googlevideo). Nie ma tu Invidious ani żadnego pośrednika.
+A lightweight YouTube Music client for **Android 2.3 and newer**, styled after the Holo look
+of the Android 4 era. It needs no account and has no ads or tracking. Metadata comes from
+InnerTube (WEB_REMIX). Audio comes straight from YouTube's servers (googlevideo), with no
+Invidious instance or other middleman.
 
-## Funkcje
+## Features
 
-- Zakładki **Główna / Odkrywaj / Biblioteka / Ustawienia**, lupa w prawym górnym rogu
-  (podpowiedzi, historia wyszukiwań, filtry: utwory, teledyski, albumy, wykonawcy, playlisty).
-- Strony albumów, playlist (ze stronicowaniem), wykonawców, list przebojów, nastrojów i gatunków.
-- **Teraz odtwarzane**: okładka, tytuł, wykonawca, pasek postępu, losowo, pętla (wszystko lub
-  jeden utwór), suwak głośności, kolejka (prawy górny róg), tekst piosenki, wyłącznik czasowy,
-  ulubione i pobieranie. Ekran zamyka się na trzy sposoby: trójkątem w lewym górnym rogu,
-  przeciągnięciem palcem w dół albo przyciskiem Wstecz.
-- **Nieskończone radio**. Kontynuacja radia YouTube zaczyna się powtarzać, więc aplikacja
-  zapamiętuje wszystkie zagrane utwory. Gdy nowych jest za mało, losuje świeży utwór-ziarno
-  spośród ostatnio zagranych.
-- **Odtwarzanie w tle** z powiadomieniem.
-  - Android 2.3: zwykłe powiadomienie.
-  - Android 3.0–4.0: powiadomienie z przyciskami.
-  - Android 4.0–4.4: przyciski i okładka na ekranie blokady (RemoteControlClient).
-  - Android 5+: MediaSession i MediaStyle, czyli systemowe kontrolki multimediów.
-  - Działają też przyciski słuchawek i Bluetooth.
-- **Jakość**: Niska (AAC 48 kb/s), Normalna (AAC 128 kb/s), Wysoka (Opus 160 kb/s, tylko
-  Android 8+). Można ustawić osobną jakość dla sieci komórkowej i dla pobierania.
-- **Cache** (można go wyłączyć): odtwarzane i kolejne utwory z kolejki zapisują się na dysku
-  (LRU z limitem rozmiaru), więc startują od razu.
-- **Pobieranie do offline** pojedynczych utworów, albumów i playlist, razem z okładką.
-- **Import i eksport playlist CSV**: Spotify (Exportify), Google Takeout (YouTube), listy
-  linków i ID. Utwory bez ID są dopasowywane po tytule, wykonawcy i długości.
-- **Crossfade** z regulacją długości (1–12 s), **korektor** (presety i pasma), wzmocnienie
-  basu, wirtualizer, normalizacja głośności (dane głośności z YouTube).
-- Motyw **ciemny i jasny**. Motyw systemowy jest dostępny od Androida 10.
-- Funkcje, których dana wersja Androida nie obsługuje, są wyszarzone z dopiskiem, od której
-  wersji działają.
+- Tabs: **Home / Explore / Library / Settings**.
+- Search button in the top-right corner, with suggestions, search history and filters (songs,
+  videos, albums, artists, playlists).
+- Pages for albums, playlists (paged), artists, charts, moods and genres.
+- **Now Playing** screen:
+  - shows the cover, title, artist and a progress bar;
+  - has controls for shuffle, repeat (all or one), volume and the queue (top-right corner);
+  - has buttons for lyrics, a sleep timer, liking and downloading;
+  - closes with the triangle button in the top-left corner, by dragging down or with Back.
+- **Endless radio.** YouTube's own radio continuation starts repeating itself after a few
+  pages. The app remembers every song it queued. When a page brings too few new songs, it
+  starts the radio again from a random recently played song.
+- **Background playback** with a notification:
+  - Android 2.3: a plain notification.
+  - Android 3.0–4.0: a notification with buttons.
+  - Android 4.0–4.4: lock-screen controls with cover art (RemoteControlClient).
+  - Android 5+: MediaSession with a MediaStyle notification (the system media controls).
+  - Headset and Bluetooth buttons work on all versions.
+- **Hardware Menu key**: opens the classic options panel. The entries depend on the screen
+  (search, Now Playing, refresh, playlist and album options, new playlist, CSV import, sleep
+  timer, equalizer, settings, exit). In Now Playing it opens the song menu instead.
+- **Audio quality**: Low (AAC 48 kbps), Normal (AAC 128 kbps), High (Opus 160 kbps, Android
+  8+ only). Mobile data and downloads can each have their own quality.
+- **Cache** (optional): played songs and the next songs in the queue are kept on disk, so they
+  start at once. Old files are removed when the size limit is reached.
+- **Offline downloads** of single songs, albums and playlists, with their cover art.
+- **CSV import and export of playlists.** Supported sources:
+  - Spotify exports (Exportify);
+  - Google Takeout (YouTube);
+  - plain lists of links or video IDs.
+  Rows without a video ID are matched by title, artist and length.
+- **Audio settings**:
+  - crossfade with an adjustable length (1–12 s);
+  - equalizer with presets and bands;
+  - bass boost and virtualizer;
+  - volume normalisation based on YouTube's loudness data.
+- **Look and language**:
+  - dark and light themes; following the system theme needs Android 10+;
+  - app language: phone default, English or Polish.
+- Options that need a newer Android are greyed out and say which version they need.
 
-## Jak gra dźwięk
+## How audio plays
 
-1. `player` (klient VISIONOS z visitorData) zwraca URL audio z googlevideo. Jeśli to się nie
-   uda, aplikacja używa klienta ANDROID (itag 18).
-2. googlevideo dławi zwykłe GET-y. Dlatego aplikacja pobiera plik kawałkami (nagłówek Range)
-   do cache, a MediaPlayer czyta go przez lokalny serwer na `127.0.0.1`.
-3. Na Androidzie 4.4+ MediaPlayer odtwarza DASH MP4 bezpośrednio.
-4. Android 2.3–4.3 nie czyta MP4 we fragmentach, więc plik jest przepakowywany do
-   klasycznego MP4. Próbki audio zostają bez zmian, zmienia się tylko kontener.
-5. Jeśli jakieś urządzenie odrzuci DASH MP4, aplikacja sama to wykrywa i przechodzi na
-   przepakowanie.
+1. The app asks the InnerTube `player` endpoint for a googlevideo audio URL. It uses the
+   VISIONOS client with visitorData first, and falls back to the ANDROID client (itag 18).
+2. googlevideo throttles plain GET requests. The app therefore downloads the file in chunks
+   (with Range headers) into its cache. MediaPlayer reads it through a small local server on
+   `127.0.0.1`.
+3. On Android 4.4+ MediaPlayer plays the DASH MP4 directly.
+4. Android 2.3–4.3 cannot read fragmented MP4. There the file is repacked into a classic MP4.
+   The audio samples are left unchanged; only the container changes.
+5. If a device's player refuses DASH MP4, the app notices and switches to repacking by itself.
 
-## TLS na starych Androidach
+## TLS on old Android
 
-- Android 4.0–4.4: TLS 1.2 przez Conscrypt.
-- Android 2.3: Conscrypt kończy się tam natywnym abortem, więc zostaje TLS systemu.
-- Android do 7.1: kilka aktualnych certyfikatów głównych jest dołączonych do aplikacji
-  (`res/raw/extra_roots.pem`). Weryfikacja certyfikatów nigdy nie jest wyłączana.
+- Android 4.0–4.4: TLS 1.2 through Conscrypt.
+- Android 2.3: Conscrypt aborts natively there, so the system TLS is used.
+- Android up to 7.1: a few current root certificates are bundled
+  (`res/raw/extra_roots.pem`).
+- Certificate checks are never turned off.
 
-## Budowanie
+## Building
 
 ```
 JAVA_HOME=<JDK 17> ./gradlew assembleRelease
 ```
 
-- APK: `app/build/outputs/apk/release/app-release.apk`.
-- Release jest podpisany lokalnym kluczem debug. Przed publikacją podmień go na własny klucz.
-- Testy (parsery na nagranych odpowiedziach InnerTube, CSV, kolejka): `./gradlew testDebugUnitTest`.
+- The APK is written to `app/build/outputs/apk/release/app-release.apk`.
+- The release build is signed with the local debug key. Replace it with your own key before
+  publishing.
+- Unit tests: `./gradlew testDebugUnitTest`. They cover the parsers (against recorded InnerTube
+  answers), CSV handling and the play queue.
 
-## Sprawdzone na
+## Tested on
 
-- Emulatory: Android 2.3.7, 4.1, 4.4, 13.
-- Telefon: Samsung Galaxy S4 (Android 4.4.2).
+- Emulators: Android 2.3.7, 4.1, 4.4 and 13.
+- Phone: Samsung Galaxy S4 (Android 4.4.2).
 
-Jeśli YouTube zmieni wersję klienta, w ustawieniach można zmienić „Wersję klienta WEB_REMIX”.
+If YouTube changes its client version, set the new one under
+Settings → Advanced → "WEB_REMIX client version".

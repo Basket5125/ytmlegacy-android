@@ -197,4 +197,9 @@
         <item quantity="one">%d song</item>
         <item quantity="other">%d songs</item>
     </plurals>
+    <string name="set_app_language">App language</string>
+    <string name="lang_system">Phone language</string>
+    <string name="menu_exit">Exit</string>
+    <string name="menu_refresh">Refresh</string>
+    <string name="menu_options">Options</string>
 </resources>

@@ -9,6 +9,7 @@ public final class App extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+        com.ytmlegacy.android.data.Lang.applyToApp(this);
         Tls.install(this);
     }
 }

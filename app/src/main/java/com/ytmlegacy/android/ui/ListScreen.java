@@ -164,6 +164,18 @@ public abstract class ListScreen extends Screen implements Rows.Callbacks {
     }
 
     @Override
+    public void addMenu(android.view.Menu menu) {
+        menu.add(0, MENU_SCREEN, 20, R.string.menu_refresh).setIcon(R.drawable.ic_refresh);
+    }
+
+    @Override
+    public boolean onMenu(int id) {
+        if (id != MENU_SCREEN) return false;
+        reload();
+        return true;
+    }
+
+    @Override
     public void onReselected() {
         if (list != null) list.setSelection(0);
     }

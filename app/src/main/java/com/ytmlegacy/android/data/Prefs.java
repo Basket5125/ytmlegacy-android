@@ -154,6 +154,10 @@ public final class Prefs {
 
     public int theme() { return p.getInt("theme", THEME_DARK); }
     public void setTheme(int v) { put("theme", v); }
+    /** UI language: "" = the phone's, else "en"/"pl". */
+    public String appLanguage() { return p.getString("app_lang", ""); }
+    public void setAppLanguage(String v) { put("app_lang", v); }
+
     public int startTab() { return p.getInt("start_tab", 0); }
     public void setStartTab(int v) { put("start_tab", v); }
     public boolean keepScreenOn() { return p.getBoolean("screen_on", false); }

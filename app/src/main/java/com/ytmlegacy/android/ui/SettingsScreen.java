@@ -236,6 +236,18 @@ public final class SettingsScreen extends Screen {
                 });
 
         header(R.string.set_look);
+        String[] langNames = {act.getString(R.string.lang_system), "English", "Polski"};
+        int langIndex = indexOf(com.ytmlegacy.android.data.Lang.CODES, prefs.appLanguage());
+        choice(act.getString(R.string.set_app_language), langNames, Math.max(0, langIndex), null, null, null,
+                new Chosen() {
+                    public void chosen(int i) {
+                        String code = com.ytmlegacy.android.data.Lang.CODES[i];
+                        if (code.equals(prefs.appLanguage())) return;
+                        prefs.setAppLanguage(code);
+                        com.ytmlegacy.android.data.Lang.applyToApp(act.getApplicationContext());
+                        act.restart();
+                    }
+                });
         boolean systemTheme = Build.VERSION.SDK_INT >= 29;
         String[] themes = {act.getString(R.string.theme_dark), act.getString(R.string.theme_light),
                 act.getString(R.string.theme_system)};

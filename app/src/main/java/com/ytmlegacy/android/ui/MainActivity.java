@@ -89,6 +89,11 @@ public final class MainActivity extends Activity implements PlayerService.Listen
     // ------------------------------------------------------------------ lifecycle
 
     @Override
+    protected void attachBaseContext(Context base) {
+        super.attachBaseContext(com.ytmlegacy.android.data.Lang.wrap(base));
+    }
+
+    @Override
     protected void onCreate(Bundle state) {
         prefs = Prefs.get(this);
         setTheme(isDarkTheme(this) ? R.style.Theme_YTM_Dark : R.style.Theme_YTM_Light);
@@ -197,6 +202,13 @@ public final class MainActivity extends Activity implements PlayerService.Listen
         selectTab(start);
         if (state != null && state.getBoolean("np", false)) npContainer.setOpenNow(true);
         handleIntent(getIntent());
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        // Before Android 4.2 the language is set on the shared resources, which a rotation resets.
+        if (Build.VERSION.SDK_INT < 17) com.ytmlegacy.android.data.Lang.wrap(this);
     }
 
     @Override
@@ -665,6 +677,71 @@ public final class MainActivity extends Activity implements PlayerService.Listen
             return;
         }
         super.onBackPressed();
+    }
+
+    // ------------------------------------------------------------------ hardware menu key
+
+    private static final int MENU_SEARCH = 1;
+    private static final int MENU_NOW_PLAYING = 2;
+    private static final int MENU_TIMER = 3;
+    private static final int MENU_EQUALIZER = 4;
+    private static final int MENU_SETTINGS = 5;
+    private static final int MENU_EXIT = 6;
+
+    @Override
+    public boolean onCreateOptionsMenu(android.view.Menu menu) {
+        return true;
+    }
+
+    /** The classic menu panel of the hardware Menu key, built for the screen on show. */
+    @Override
+    public boolean onPrepareOptionsMenu(android.view.Menu menu) {
+        menu.clear();
+        if (npContainer.isOpen()) return false; // the Now Playing menu is shown instead
+        Screen s = top();
+        if (s == null || !s.isSearch()) {
+            menu.add(0, MENU_SEARCH, 1, R.string.search).setIcon(R.drawable.ic_search);
+        }
+        if (player != null && player.current() != null) {
+            menu.add(0, MENU_NOW_PLAYING, 2, R.string.now_playing).setIcon(R.drawable.ic_note);
+        }
+        if (s != null) s.addMenu(menu);
+        if (player != null && player.current() != null) {
+            menu.add(0, MENU_TIMER, 30, R.string.sleep_timer).setIcon(R.drawable.ic_timer);
+        }
+        menu.add(0, MENU_EQUALIZER, 31, R.string.set_equalizer).setIcon(R.drawable.ic_equalizer);
+        if (tab != 3) menu.add(0, MENU_SETTINGS, 32, R.string.tab_settings).setIcon(R.drawable.ic_more);
+        menu.add(0, MENU_EXIT, 40, R.string.menu_exit).setIcon(R.drawable.ic_close);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(android.view.MenuItem item) {
+        switch (item.getItemId()) {
+            case MENU_SEARCH:
+                openSearch();
+                return true;
+            case MENU_NOW_PLAYING:
+                openNowPlaying();
+                return true;
+            case MENU_TIMER:
+                actions.sleepTimer();
+                return true;
+            case MENU_EQUALIZER:
+                push(new EqualizerScreen());
+                return true;
+            case MENU_SETTINGS:
+                selectTab(3);
+                return true;
+            case MENU_EXIT:
+                // Stops the music too: "exit" should leave nothing running.
+                if (player != null) player.stop();
+                finish();
+                return true;
+            default:
+                Screen s = top();
+                return (s != null && s.onMenu(item.getItemId())) || super.onOptionsItemSelected(item);
+        }
     }
 
     @Override

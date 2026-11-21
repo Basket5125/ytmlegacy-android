@@ -199,4 +199,9 @@
         <item quantity="many">%d utworów</item>
         <item quantity="other">%d utworu</item>
     </plurals>
+    <string name="set_app_language">Język aplikacji</string>
+    <string name="lang_system">Język telefonu</string>
+    <string name="menu_exit">Zakończ</string>
+    <string name="menu_refresh">Odśwież</string>
+    <string name="menu_options">Opcje</string>
 </resources>
