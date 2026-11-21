@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingBottom="4dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="12dp">
+
+        <ImageView
+            android:id="@+id/ph_art"
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:contentDescription="@null"
+            android:scaleType="centerCrop" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:paddingLeft="12dp">
+
+            <TextView
+                android:id="@+id/ph_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="3"
+                android:textColor="?attr/ytmText"
+                android:textSize="19sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/ph_artist"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:ellipsize="end"
+                android:singleLine="true"
+                android:textColor="@color/holo_blue"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/ph_subtitle"
+                style="@style/RowSubtitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:maxLines="2"
+                android:singleLine="false" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/ph_buttons"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingLeft="12dp"
+        android:paddingRight="12dp">
+
+        <Button android:id="@+id/ph_play" style="@style/ButtonYtm" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginRight="6dp" android:layout_weight="1" android:text="@string/play" />
+        <Button android:id="@+id/ph_shuffle" style="@style/ButtonYtm" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginRight="6dp" android:layout_weight="1" android:text="@string/shuffle" />
+        <ImageButton android:id="@+id/ph_save" android:layout_width="42dp" android:layout_height="40dp" android:background="?attr/ytmItemBackground" android:contentDescription="@string/save_to_library" android:src="@drawable/ic_bookmark_border" />
+        <ImageButton android:id="@+id/ph_more" android:layout_width="42dp" android:layout_height="40dp" android:background="?attr/ytmItemBackground" android:contentDescription="@string/more" android:src="@drawable/ic_more" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/ph_description"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/ytmItemBackground"
+        android:ellipsize="end"
+        android:maxLines="3"
+        android:paddingLeft="12dp"
+        android:paddingRight="12dp"
+        android:paddingTop="10dp"
+        android:textColor="?attr/ytmText2"
+        android:textSize="13sp"
+        android:visibility="gone" />
+</LinearLayout>

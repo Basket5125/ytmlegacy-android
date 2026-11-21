@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/ytmBackground">
+
+    <LinearLayout
+        android:id="@+id/main"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <!-- Action bar -->
+        <LinearLayout
+            android:id="@+id/bar"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/bar_height"
+            android:background="@drawable/bar_bg"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageButton
+                android:id="@+id/bar_up"
+                style="@style/BarButton"
+                android:contentDescription="@string/action_close"
+                android:src="@drawable/ic_back"
+                android:visibility="gone" />
+
+            <ImageView
+                android:id="@+id/bar_logo"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="4dp"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_launcher" />
+
+            <TextView
+                android:id="@+id/bar_title"
+                style="@style/BarTitle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:paddingLeft="6dp"
+                android:text="@string/app_name" />
+
+            <EditText
+                android:id="@+id/bar_search"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginBottom="4dp"
+                android:layout_marginTop="4dp"
+                android:layout_weight="1"
+                android:background="@null"
+                android:hint="@string/search_hint"
+                android:imeOptions="actionSearch"
+                android:inputType="text"
+                android:paddingLeft="6dp"
+                android:singleLine="true"
+                android:textColor="@color/white"
+                android:textColorHint="@color/white_70"
+                android:textSize="17sp"
+                android:visibility="gone" />
+
+            <ImageButton
+                android:id="@+id/bar_clear"
+                style="@style/BarButton"
+                android:contentDescription="@string/cancel"
+                android:src="@drawable/ic_close"
+                android:visibility="gone" />
+
+            <ImageButton
+                android:id="@+id/bar_search_button"
+                style="@style/BarButton"
+                android:contentDescription="@string/search"
+                android:src="@drawable/ic_search" />
+        </LinearLayout>
+
+        <!-- Tabs -->
+        <LinearLayout
+            android:id="@+id/tabs"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/tab_height"
+            android:background="?attr/ytmSurface"
+            android:orientation="horizontal">
+
+            <TextView android:id="@+id/tab_home" style="@style/Tab" android:background="@drawable/tab_indicator" android:text="@string/tab_home" />
+            <TextView android:id="@+id/tab_explore" style="@style/Tab" android:background="@drawable/tab_indicator" android:text="@string/tab_explore" />
+            <TextView android:id="@+id/tab_library" style="@style/Tab" android:background="@drawable/tab_indicator" android:text="@string/tab_library" />
+            <TextView android:id="@+id/tab_settings" style="@style/Tab" android:background="@drawable/tab_indicator" android:text="@string/tab_settings" />
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1px"
+            android:background="?attr/ytmDivider" />
+
+        <FrameLayout
+            android:id="@+id/content"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <include layout="@layout/mini_player" />
+    </LinearLayout>
+
+    <com.ytmlegacy.android.ui.DragDownLayout
+        android:id="@+id/np_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone">
+
+        <include layout="@layout/now_playing" />
+    </com.ytmlegacy.android.ui.DragDownLayout>
+</FrameLayout>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="holo_blue">#FF33B5E5</color>
+    <color name="holo_blue_dark">#FF0099CC</color>
+    <color name="bar_top">#FF0E7FB8</color>
+    <color name="bar_bottom">#FF0A6A9C</color>
+    <color name="bar_shadow">#33000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="white_pressed">#40FFFFFF</color>
+    <color name="white_focused">#26FFFFFF</color>
+    <color name="white_70">#B3FFFFFF</color>
+    <color name="pressed_blue">#5533B5E5</color>
+    <color name="focused_blue">#3333B5E5</color>
+
+    <color name="dark_bg">#FF111417</color>
+    <color name="dark_surface">#FF1A1E22</color>
+    <color name="dark_card">#FF22272C</color>
+    <color name="dark_divider">#FF2C3238</color>
+    <color name="dark_text">#FFF2F4F5</color>
+    <color name="dark_text2">#FF8E9AA4</color>
+    <color name="dark_icon">#FFDDE3E7</color>
+    <color name="dark_track">#FF3A4148</color>
+
+    <color name="light_bg">#FFEDF0F2</color>
+    <color name="light_surface">#FFFFFFFF</color>
+    <color name="light_card">#FFFFFFFF</color>
+    <color name="light_divider">#FFD5DBE0</color>
+    <color name="light_text">#FF1B1F23</color>
+    <color name="light_text2">#FF64717B</color>
+    <color name="light_icon">#FF3B444C</color>
+    <color name="light_track">#FFC7CED4</color>
+
+    <color name="np_bg_top">#FF15212B</color>
+    <color name="np_bg_bottom">#FF0B0E11</color>
+    <color name="placeholder_dark">#FF2A3036</color>
+    <color name="placeholder_light">#FFDCE2E6</color>
+</resources>

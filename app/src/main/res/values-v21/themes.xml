@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Base.YTM.Dark" parent="@android:style/Theme.Holo.NoActionBar">
+        <item name="android:statusBarColor">@color/bar_bottom</item>
+        <item name="android:navigationBarColor">@color/dark_bg</item>
+    </style>
+    <style name="Base.YTM.Light" parent="@android:style/Theme.Holo.Light.NoActionBar">
+        <item name="android:statusBarColor">@color/bar_bottom</item>
+    </style>
+</resources>

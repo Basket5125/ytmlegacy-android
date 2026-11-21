@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Android 2.x: the classic theme; every widget below is styled by the app itself. -->
+    <style name="Base.YTM.Dark" parent="@android:style/Theme.Black.NoTitleBar" />
+    <style name="Base.YTM.Light" parent="@android:style/Theme.Light.NoTitleBar" />
+
+    <style name="Theme.YTM.Dark" parent="Base.YTM.Dark">
+        <item name="android:windowBackground">@color/dark_bg</item>
+        <item name="android:textColorPrimary">@color/dark_text</item>
+        <item name="android:textColorSecondary">@color/dark_text2</item>
+        <item name="android:colorBackground">@color/dark_bg</item>
+        <item name="android:listDivider">@drawable/divider_dark</item>
+        <item name="ytmBackground">@color/dark_bg</item>
+        <item name="ytmSurface">@color/dark_surface</item>
+        <item name="ytmCard">@color/dark_card</item>
+        <item name="ytmDivider">@color/dark_divider</item>
+        <item name="ytmText">@color/dark_text</item>
+        <item name="ytmText2">@color/dark_text2</item>
+        <item name="ytmIcon">@color/dark_icon</item>
+        <item name="ytmItemBackground">@drawable/item_bg_dark</item>
+        <item name="ytmEditBackground">@drawable/edit_bg_dark</item>
+        <item name="ytmSeekBarProgress">@drawable/seek_progress_dark</item>
+        <item name="ytmCheckBox">@drawable/check_dark</item>
+        <item name="ytmPlaceholder">@drawable/art_placeholder_dark</item>
+        <item name="ytmPlaceholderSmall">@drawable/art_placeholder_dark</item>
+        <item name="ytmChip">@drawable/chip_dark</item>
+        <item name="ytmDark">true</item>
+    </style>
+
+    <style name="Theme.YTM.Light" parent="Base.YTM.Light">
+        <item name="android:windowBackground">@color/light_bg</item>
+        <item name="android:textColorPrimary">@color/light_text</item>
+        <item name="android:textColorSecondary">@color/light_text2</item>
+        <item name="android:colorBackground">@color/light_bg</item>
+        <item name="android:listDivider">@drawable/divider_light</item>
+        <item name="ytmBackground">@color/light_bg</item>
+        <item name="ytmSurface">@color/light_surface</item>
+        <item name="ytmCard">@color/light_card</item>
+        <item name="ytmDivider">@color/light_divider</item>
+        <item name="ytmText">@color/light_text</item>
+        <item name="ytmText2">@color/light_text2</item>
+        <item name="ytmIcon">@color/light_icon</item>
+        <item name="ytmItemBackground">@drawable/item_bg_light</item>
+        <item name="ytmEditBackground">@drawable/edit_bg_light</item>
+        <item name="ytmSeekBarProgress">@drawable/seek_progress_light</item>
+        <item name="ytmCheckBox">@drawable/check_light</item>
+        <item name="ytmPlaceholder">@drawable/art_placeholder_light</item>
+        <item name="ytmPlaceholderSmall">@drawable/art_placeholder_light</item>
+        <item name="ytmChip">@drawable/chip_light</item>
+        <item name="ytmDark">false</item>
+    </style>
+</resources>

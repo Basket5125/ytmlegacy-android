@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Android 3.0+: Holo for dialogs and system widgets. Holo.Light.NoActionBar only exists from API 13. -->
+    <style name="Base.YTM.Dark" parent="@android:style/Theme.Holo.NoActionBar" />
+    <style name="Base.YTM.Light" parent="@android:style/Theme.Holo.Light">
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowNoTitle">true</item>
+    </style>
+</resources>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <attr name="ytmBackground" format="color" />
+    <attr name="ytmSurface" format="color" />
+    <attr name="ytmCard" format="color" />
+    <attr name="ytmDivider" format="color" />
+    <attr name="ytmText" format="color" />
+    <attr name="ytmText2" format="color" />
+    <attr name="ytmIcon" format="color" />
+    <attr name="ytmItemBackground" format="reference" />
+    <attr name="ytmEditBackground" format="reference" />
+    <attr name="ytmSeekBarProgress" format="reference" />
+    <attr name="ytmCheckBox" format="reference" />
+    <attr name="ytmPlaceholder" format="reference" />
+    <attr name="ytmPlaceholderSmall" format="reference" />
+    <attr name="ytmChip" format="reference" />
+    <attr name="ytmDark" format="boolean" />
+</resources>

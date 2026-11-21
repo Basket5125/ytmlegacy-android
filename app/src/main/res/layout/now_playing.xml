@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/np"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/np_bg"
+    android:clickable="true"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:id="@+id/np_top"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <ImageButton
+            android:id="@+id/np_close"
+            android:layout_width="52dp"
+            android:layout_height="52dp"
+            android:background="@drawable/round_button_bg"
+            android:contentDescription="@string/action_close"
+            android:src="@drawable/ic_collapse" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/np_heading"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:singleLine="true"
+                android:text="@string/now_playing"
+                android:textColor="@color/holo_blue"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/np_context"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:singleLine="true"
+                android:textColor="#99FFFFFF"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <ImageButton
+            android:id="@+id/np_queue"
+            android:layout_width="52dp"
+            android:layout_height="52dp"
+            android:background="@drawable/round_button_bg"
+            android:contentDescription="@string/queue"
+            android:src="@drawable/ic_queue" />
+    </LinearLayout>
+
+    <FrameLayout
+        android:id="@+id/np_middle"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <com.ytmlegacy.android.ui.SquareImageView
+            android:id="@+id/np_art"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:layout_marginLeft="24dp"
+            android:layout_marginRight="24dp"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="8dp"
+            android:background="#FF1E2A33"
+            android:contentDescription="@null"
+            android:scaleType="centerCrop" />
+
+        <LinearLayout
+            android:id="@+id/np_queue_panel"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#E60B0E11"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingLeft="16dp">
+
+                <TextView
+                    android:id="@+id/np_queue_title"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:singleLine="true"
+                    android:text="@string/up_next"
+                    android:textColor="@color/holo_blue"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/np_queue_clear"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/round_button_bg"
+                    android:gravity="center"
+                    android:paddingLeft="12dp"
+                    android:paddingRight="12dp"
+                    android:text="@string/clear_queue"
+                    android:textColor="#CCFFFFFF"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <ListView
+                android:id="@+id/np_queue_list"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:cacheColorHint="#00000000"
+                android:divider="#22FFFFFF"
+                android:dividerHeight="1px"
+                android:fastScrollEnabled="true" />
+        </LinearLayout>
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/np_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ellipsize="marquee"
+        android:gravity="center"
+        android:marqueeRepeatLimit="marquee_forever"
+        android:paddingLeft="20dp"
+        android:paddingRight="20dp"
+        android:singleLine="true"
+        android:textColor="@color/white"
+        android:textSize="20sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/np_artist"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/round_button_bg"
+        android:ellipsize="end"
+        android:gravity="center"
+        android:paddingBottom="2dp"
+        android:paddingLeft="20dp"
+        android:paddingRight="20dp"
+        android:singleLine="true"
+        android:textColor="#B3FFFFFF"
+        android:textSize="15sp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingLeft="8dp"
+        android:paddingRight="8dp">
+
+        <TextView
+            android:id="@+id/np_time"
+            android:layout_width="44dp"
+            android:layout_height="wrap_content"
+            android:gravity="right"
+            android:text="0:00"
+            android:textColor="#B3FFFFFF"
+            android:textSize="12sp" />
+
+        <SeekBar
+            android:id="@+id/np_seek"
+            style="@style/SeekBarNp"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:max="1000" />
+
+        <TextView
+            android:id="@+id/np_duration"
+            android:layout_width="44dp"
+            android:layout_height="wrap_content"
+            android:text="0:00"
+            android:textColor="#B3FFFFFF"
+            android:textSize="12sp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <ImageButton android:id="@+id/np_shuffle" android:layout_width="0dp" android:layout_height="52dp" android:layout_weight="1" android:background="@drawable/round_button_bg" android:contentDescription="@string/shuffle" android:src="@drawable/ic_shuffle" />
+        <ImageButton android:id="@+id/np_prev" android:layout_width="0dp" android:layout_height="56dp" android:layout_weight="1" android:background="@drawable/round_button_bg" android:contentDescription="@string/action_previous" android:src="@drawable/ic_skip_previous" />
+
+        <FrameLayout
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            android:layout_marginLeft="6dp"
+            android:layout_marginRight="6dp">
+
+            <ImageButton
+                android:id="@+id/np_toggle"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/play_circle"
+                android:contentDescription="@string/action_play"
+                android:src="@drawable/ic_play" />
+
+            <ProgressBar
+                android:id="@+id/np_loading"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="gone" />
+        </FrameLayout>
+
+        <ImageButton android:id="@+id/np_next" android:layout_width="0dp" android:layout_height="56dp" android:layout_weight="1" android:background="@drawable/round_button_bg" android:contentDescription="@string/action_next" android:src="@drawable/ic_skip_next" />
+        <ImageButton android:id="@+id/np_repeat" android:layout_width="0dp" android:layout_height="52dp" android:layout_weight="1" android:background="@drawable/round_button_bg" android:contentDescription="@string/repeat_off" android:src="@drawable/ic_repeat" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingLeft="12dp"
+        android:paddingRight="12dp">
+
+        <ImageView android:id="@+id/np_vol_down" android:layout_width="24dp" android:layout_height="24dp" android:contentDescription="@string/volume" android:src="@drawable/ic_volume_down" />
+
+        <SeekBar
+            android:id="@+id/np_volume"
+            style="@style/SeekBarNp"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1" />
+
+        <ImageView android:id="@+id/np_vol_up" android:layout_width="24dp" android:layout_height="24dp" android:contentDescription="@string/volume" android:src="@drawable/ic_volume_up" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_marginBottom="6dp"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <ImageButton android:id="@+id/np_like" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:background="@drawable/round_button_bg" android:contentDescription="@string/like" android:src="@drawable/ic_favorite_border" />
+        <ImageButton android:id="@+id/np_download" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:background="@drawable/round_button_bg" android:contentDescription="@string/download" android:src="@drawable/ic_download" />
+        <ImageButton android:id="@+id/np_lyrics" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:background="@drawable/round_button_bg" android:contentDescription="@string/lyrics" android:src="@drawable/ic_lyrics" />
+        <ImageButton android:id="@+id/np_timer" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:background="@drawable/round_button_bg" android:contentDescription="@string/sleep_timer" android:src="@drawable/ic_timer" />
+        <ImageButton android:id="@+id/np_more" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:background="@drawable/round_button_bg" android:contentDescription="@string/more" android:src="@drawable/ic_more" />
+    </LinearLayout>
+</LinearLayout>

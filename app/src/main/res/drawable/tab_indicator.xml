@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android" android:exitFadeDuration="150">
+    <item android:state_pressed="true" android:drawable="@color/pressed_blue" />
+    <item android:state_selected="true">
+        <layer-list>
+            <item><shape><solid android:color="@android:color/transparent" /></shape></item>
+            <item android:top="39dp"><shape><solid android:color="@color/holo_blue" /></shape></item>
+        </layer-list>
+    </item>
+    <item android:drawable="@android:color/transparent" />
+</selector>

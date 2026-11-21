@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="bar_height">48dp</dimen>
+    <dimen name="tab_height">42dp</dimen>
+    <dimen name="mini_height">58dp</dimen>
+    <dimen name="row_thumb">48dp</dimen>
+    <dimen name="card_size">136dp</dimen>
+</resources>

@@ -1,0 +1,2 @@
+rootProject.name = "ytmlegacy-android"
+include ':app'
