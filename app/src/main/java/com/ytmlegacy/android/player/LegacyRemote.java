@@ -96,7 +96,8 @@ final class LegacyRemote implements Remote {
             e.putLong(MediaMetadataRetriever.METADATA_KEY_DURATION, durationMs);
             if (art != null && showArt) {
                 // The editor may recycle the bitmap it is given; hand it a copy.
-                Bitmap copy = art.copy(art.getConfig() == null ? Bitmap.Config.RGB_565 : art.getConfig(), false);
+                // RGB_565 halves the bytes sent to the lock screen.
+                Bitmap copy = art.copy(Bitmap.Config.RGB_565, false);
                 if (copy != null) e.putBitmap(RemoteControlClient.MetadataEditor.BITMAP_KEY_ARTWORK, copy);
             }
             e.apply();

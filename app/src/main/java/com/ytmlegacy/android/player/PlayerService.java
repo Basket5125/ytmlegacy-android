@@ -438,6 +438,16 @@ public final class PlayerService extends Service implements Remote.Commands {
 
     /** Re-applies equalizer settings and volume after the settings changed. */
     public void settingsChanged() {
+        // The cover quality may have changed: load the lock-screen art again.
+        final Song playing = queue.current();
+        if (playing != null) {
+            prefetcher.execute(new Runnable() {
+                @Override
+                public void run() {
+                    loadArt(playing, true);
+                }
+            });
+        }
         for (Track t : new Track[]{cur, nxt, fadingOut}) {
             if (t != null && t.fx != null) t.fx.apply(prefs);
             if (t != null) applyVolume(t);
@@ -1260,11 +1270,22 @@ public final class PlayerService extends Service implements Remote.Commands {
     }
 
     private void loadArt(final Song s) {
-        if (s.videoId.equals(artFor) || s.thumb.length() == 0) return;
-        Bitmap loaded = Images.get(this).loadSync(s.thumb, 320);
-        // Bitmaps travel through Binder (1 MB limit, less on old Android): keep them small.
-        final Bitmap b = scaled(loaded, 320);
-        final Bitmap small = scaled(loaded, 128);
+        loadArt(s, false);
+    }
+
+    /** {@code force}: load again even if this song's art is there (the size setting changed). */
+    private void loadArt(final Song s, boolean force) {
+        if ((!force && s.videoId.equals(artFor)) || s.thumb.length() == 0) return;
+        // Sizes follow the cover-quality setting (Wi-Fi / mobile), within what may cross Binder
+        // (1 MB per transaction): MediaSession scales to at most 320 dp itself; the 4.x lock
+        // screen gets at most 512 px, sent as RGB_565 (~0.5 MB).
+        Images images = Images.get(this);
+        float density = getResources().getDisplayMetrics().density;
+        int lockPx = Build.VERSION.SDK_INT >= 21 ? images.px(213, (int) (320 * density)) : images.px(171, 512);
+        int iconPx = images.px(64, Build.VERSION.SDK_INT >= 21 ? 256 : 192);
+        Bitmap loaded = images.loadSync(s.thumb, lockPx);
+        final Bitmap b = scaled(loaded, lockPx);
+        final Bitmap small = scaled(loaded, iconPx);
         handler.post(new Runnable() {
             @Override
             public void run() {

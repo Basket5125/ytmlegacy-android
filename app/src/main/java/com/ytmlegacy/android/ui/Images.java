@@ -71,7 +71,7 @@ public final class Images {
      */
     public int px(float dp, int max) {
         long now = System.currentTimeMillis();
-        if (now - factorAt > 3000) {
+        if (now - factorAt > 3000 || factorAt == 0) {
             factorAt = now;
             com.ytmlegacy.android.data.Prefs prefs = com.ytmlegacy.android.data.Prefs.get(context);
             int q = onWifi() ? prefs.imageQualityWifi() : prefs.imageQualityMobile();
@@ -263,6 +263,7 @@ public final class Images {
     public synchronized void clearMemory() {
         memory.clear();
         memoryUsed = 0;
+        factorAt = 0; // re-read the quality setting
     }
 
     public void clearDisk() {

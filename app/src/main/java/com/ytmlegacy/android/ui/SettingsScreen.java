@@ -266,7 +266,7 @@ public final class SettingsScreen extends Screen {
             public void chosen(int i) {
                 prefs.setImageQualityWifi(i);
                 Images.get(act).clearMemory();
-                build();
+                changed();
             }
         });
         choice(act.getString(R.string.set_img_mobile), imageQ, prefs.imageQualityMobile(), null, null, null,
@@ -274,7 +274,7 @@ public final class SettingsScreen extends Screen {
                     public void chosen(int i) {
                         prefs.setImageQualityMobile(i);
                         Images.get(act).clearMemory();
-                        build();
+                        changed();
                     }
                 });
         String[] tabs = {act.getString(R.string.tab_home), act.getString(R.string.tab_explore),
