@@ -52,6 +52,8 @@ public final class Rows {
         public boolean progress;
         public String button = "";
         public Object tag;
+        /** A carousel's cards, built once and kept (inflating them while scrolling made lists stutter). */
+        View view;
 
         public Song song() {
             return item == null ? null : item.song;
@@ -171,6 +173,9 @@ public final class Rows {
         private final int iconColor;
         private final int placeholder;
         private final boolean dark;
+        private final int textColor;
+        private final android.os.Handler handler = new android.os.Handler();
+        private ViewGroup lastParent;
         private String playingId = "";
         /** Rows of the playing song are drawn in blue; set by the screen. */
 
@@ -181,12 +186,33 @@ public final class Rows {
             iconColor = Ui.iconColor(context);
             placeholder = Ui.attrResource(context, R.attr.ytmPlaceholder);
             dark = MainActivity.isDarkTheme(context);
+            textColor = Ui.attrColor(context, R.attr.ytmText);
         }
 
         public void setRows(List<Row> rows) {
             this.rows = rows;
             notifyDataSetChanged();
+            handler.removeCallbacks(prebuild);
+            handler.post(prebuild);
         }
+
+        /** Builds the carousels not yet on screen, one per frame, before the user scrolls to them. */
+        private final Runnable prebuild = new Runnable() {
+            @Override
+            public void run() {
+                if (lastParent == null) {
+                    handler.postDelayed(this, 50);
+                    return;
+                }
+                for (Row r : rows) {
+                    if (r.type == CAROUSEL && r.view == null) {
+                        buildCarousel(r, lastParent);
+                        handler.postDelayed(this, 16);
+                        return;
+                    }
+                }
+            }
+        };
 
         public List<Row> rows() {
             return rows;
@@ -222,7 +248,9 @@ public final class Rows {
 
         @Override
         public int getItemViewType(int position) {
-            return rows.get(position).type;
+            int t = rows.get(position).type;
+            // Carousels keep their own view: the list must not hand it to another row.
+            return t == CAROUSEL ? android.widget.AdapterView.ITEM_VIEW_TYPE_IGNORE : t;
         }
 
         @Override
@@ -239,6 +267,7 @@ public final class Rows {
         @Override
         public View getView(int position, View convert, ViewGroup parent) {
             final Row row = rows.get(position);
+            lastParent = parent;
             switch (row.type) {
                 case HEADER:
                     return header(row, convert, parent);
@@ -285,7 +314,7 @@ public final class Rows {
             TextView title = (TextView) v.findViewById(R.id.row_title);
             title.setText(item.title);
             boolean playing = item.song != null && item.song.videoId.equals(playingId);
-            title.setTextColor(playing ? 0xFF33B5E5 : Ui.attrColor(context, R.attr.ytmText));
+            title.setTextColor(playing ? 0xFF33B5E5 : textColor);
             String sub = item.subtitle;
             if (row.type == ENTRY && sub.length() == 0) sub = typeName(item.type);
             ((TextView) v.findViewById(R.id.row_subtitle)).setText(sub);
@@ -311,19 +340,21 @@ public final class Rows {
         }
 
         private View carousel(final Row row, View v, ViewGroup parent) {
-            if (v == null) v = inflater.inflate(R.layout.row_carousel, parent, false);
+            if (row.view == null) buildCarousel(row, parent);
+            return row.view;
+        }
+
+        private void buildCarousel(final Row row, ViewGroup parent) {
+            View v = inflater.inflate(R.layout.row_carousel, parent, false);
+            v.setHorizontalFadingEdgeEnabled(false); // fading edges cost a layer per frame
             LinearLayout holder = (LinearLayout) v.findViewById(R.id.carousel_items);
-            if (holder.getTag() == row) return v; // already showing these cards
-            holder.setTag(row);
-            holder.removeAllViews();
-            v.scrollTo(0, 0);
+            int px = Images.get(context).px(126, 720);
             for (final Item item : row.items) {
                 View card = inflater.inflate(R.layout.card, holder, false);
                 ((TextView) card.findViewById(R.id.card_title)).setText(item.title);
                 ((TextView) card.findViewById(R.id.card_subtitle)).setText(
                         item.subtitle.length() > 0 ? item.subtitle : typeName(item.type));
-                Images.get(context).load((ImageView) card.findViewById(R.id.card_art), item.thumb,
-                        Images.get(context).px(126, 720), placeholder);
+                Images.get(context).load((ImageView) card.findViewById(R.id.card_art), item.thumb, px, placeholder);
                 card.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
@@ -339,7 +370,7 @@ public final class Rows {
                 });
                 holder.addView(card);
             }
-            return v;
+            row.view = v;
         }
 
         private View tiles(final Row row, View v, ViewGroup parent) {

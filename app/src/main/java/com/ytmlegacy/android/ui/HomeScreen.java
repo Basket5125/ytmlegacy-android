@@ -1,5 +1,7 @@
 package com.ytmlegacy.android.ui;
 
+import android.view.View;
+
 import com.ytmlegacy.android.R;
 import com.ytmlegacy.android.data.Library;
 import com.ytmlegacy.android.data.Prefs;
@@ -25,8 +27,29 @@ public final class HomeScreen extends ListScreen {
         return act.getString(explore ? R.string.tab_explore : R.string.app_name);
     }
 
+    private boolean shownCached;
+
     @Override
     protected void load() {
+        if (!shownCached) {
+            // Show the copy saved last time at once; the fresh page replaces it when it arrives.
+            shownCached = true;
+            run(new Task<Page>() {
+                @Override
+                protected Page work() {
+                    return InnerTube.get(act).cachedPage(explore ? "FEmusic_explore" : "FEmusic_home");
+                }
+
+                @Override
+                protected void done(Page page) {
+                    if (page == null || fresh) return;
+                    List<Rows.Row> rows = new ArrayList<Rows.Row>();
+                    if (!explore) addRecent(rows);
+                    rows.addAll(Rows.fromPage(page, false));
+                    showCached(rows);
+                }
+            });
+        }
         run(new Task<Page>() {
             @Override
             protected Page work() throws Exception {
@@ -36,14 +59,23 @@ public final class HomeScreen extends ListScreen {
 
             @Override
             protected void done(Page page) {
+                fresh = true;
                 List<Rows.Row> rows = new ArrayList<Rows.Row>();
                 if (!explore) addRecent(rows);
                 rows.addAll(Rows.fromPage(page, false));
+                int first = list.getFirstVisiblePosition();
+                View top = list.getChildAt(0);
+                int offset = top == null ? 0 : top.getTop();
                 setRows(rows);
+                if (cachedShown) list.setSelectionFromTop(first, offset); // keep the scroll position
             }
 
             @Override
             protected void failed(Exception e) {
+                if (cachedShown) {
+                    loadDone();
+                    return; // the saved copy stays on screen
+                }
                 if (!explore && Prefs.get(act).playHistory()) {
                     // Offline: still offer what was played lately.
                     List<Rows.Row> rows = new ArrayList<Rows.Row>();
@@ -56,6 +88,15 @@ public final class HomeScreen extends ListScreen {
                 }
             }
         });
+    }
+
+    private boolean fresh;
+    private boolean cachedShown;
+
+    private void showCached(List<Rows.Row> rows) {
+        cachedShown = true;
+        adapter.setRows(rows);
+        adapter.setPlaying(act.playingId());
     }
 
     private void addRecent(List<Rows.Row> rows) {

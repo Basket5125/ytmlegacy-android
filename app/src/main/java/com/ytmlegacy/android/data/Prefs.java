@@ -174,6 +174,10 @@ public final class Prefs {
     public boolean stats() { return p.getBoolean("stats", true); }
     public void setStats(boolean v) { put("stats", v); }
 
+    /** The song last played, for the widget before the player has started. */
+    public String lastSong() { return p.getString("last_song", ""); }
+    public void setLastSong(String json) { put("last_song", json); }
+
     public int startTab() { return p.getInt("start_tab", 0); }
     public void setStartTab(int v) { put("start_tab", v); }
     public boolean keepScreenOn() { return p.getBoolean("screen_on", false); }

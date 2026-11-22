@@ -33,9 +33,45 @@ public final class InnerTube {
 
     private static InnerTube instance;
     private final Prefs prefs;
+    private final java.io.File pages;
 
     private InnerTube(Context context) {
         prefs = Prefs.get(context);
+        pages = new java.io.File(context.getCacheDir(), "pages");
+    }
+
+    /** Home and Explore answers are kept on disk, so those tabs show at once on the next start. */
+    private java.io.File pageFile(String browseId) {
+        return new java.io.File(pages, browseId + "_" + prefs.language() + "_" + prefs.region() + ".json");
+    }
+
+    /** The last saved Home/Explore page (at most 3 days old), or null. */
+    public Page cachedPage(String browseId) {
+        java.io.File f = pageFile(browseId);
+        if (!f.exists() || System.currentTimeMillis() - f.lastModified() > 3L * 24 * 3600 * 1000) return null;
+        try {
+            byte[] data = Http.readAll(new java.io.FileInputStream(f), 0);
+            return Parser.page(new JSONObject(new String(data, "UTF-8")), false);
+        } catch (Exception e) {
+            f.delete();
+            return null;
+        }
+    }
+
+    private void savePage(String browseId, JSONObject root) {
+        try {
+            pages.mkdirs();
+            java.io.File tmp = new java.io.File(pages, browseId + ".tmp");
+            java.io.FileOutputStream out = new java.io.FileOutputStream(tmp);
+            try {
+                out.write(root.toString().getBytes("UTF-8"));
+            } finally {
+                out.close();
+            }
+            tmp.renameTo(pageFile(browseId));
+        } catch (Exception e) {
+            Log.w(TAG, "save page: " + e);
+        }
     }
 
     public static synchronized InnerTube get(Context context) {
@@ -46,11 +82,15 @@ public final class InnerTube {
     // ---------------------------------------------------------------- endpoints
 
     public Page home() throws IOException {
-        return Parser.page(browseRaw("FEmusic_home", ""), false);
+        JSONObject root = browseRaw("FEmusic_home", "");
+        savePage("FEmusic_home", root);
+        return Parser.page(root, false);
     }
 
     public Page explore() throws IOException {
-        return Parser.page(browseRaw("FEmusic_explore", ""), false);
+        JSONObject root = browseRaw("FEmusic_explore", "");
+        savePage("FEmusic_explore", root);
+        return Parser.page(root, false);
     }
 
     public Page browse(String browseId, String params) throws IOException {

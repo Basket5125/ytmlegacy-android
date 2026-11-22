@@ -57,6 +57,12 @@ public final class PlayerService extends Service implements Remote.Commands {
     public static final String ACTION_PREVIOUS = "ytm.PREVIOUS";
     public static final String ACTION_STOP = "ytm.STOP";
     public static final String ACTION_KEY = "ytm.KEY";
+    public static final String ACTION_LIKE = "ytm.LIKE";
+    public static final String ACTION_WIDGET = "ytm.WIDGET";
+    /** True while the service exists (a new widget then asks it for the current state). */
+    static volatile boolean running;
+    /** Set on intents from the widget: on Android 8+ they start the service in the foreground. */
+    public static final String EXTRA_FOREGROUND = "fg";
     public static final String EXTRA_KEY = "key";
     private static final String CHANNEL = "playback";
     private static final int NOTIFICATION_ID = 1;
@@ -231,6 +237,7 @@ public final class PlayerService extends Service implements Remote.Commands {
     @Override
     public void onCreate() {
         super.onCreate();
+        running = true;
         prefs = Prefs.get(this);
         audio = (AudioManager) getSystemService(AUDIO_SERVICE);
         queue = new PlayQueue();
@@ -245,6 +252,16 @@ public final class PlayerService extends Service implements Remote.Commands {
             wifiLock.setReferenceCounted(false);
         }
         handler.post(tick);
+        updateWidget();
+        final Song restored = queue.current();
+        if (restored != null && PlayerWidget.hasWidgets(this)) {
+            prefetcher.execute(new Runnable() {
+                @Override
+                public void run() {
+                    loadArt(restored);
+                }
+            });
+        }
     }
 
     /**
@@ -322,6 +339,19 @@ public final class PlayerService extends Service implements Remote.Commands {
     public int onStartCommand(Intent intent, int flags, int startId) {
         started = true;
         String action = intent == null ? null : intent.getAction();
+        boolean fromForegroundStart = intent != null && intent.getBooleanExtra(EXTRA_FOREGROUND, false)
+                && Build.VERSION.SDK_INT >= 26;
+        if (fromForegroundStart && !foreground) {
+            // startForegroundService() needs startForeground() within seconds, whatever the action.
+            Song s = queue.current();
+            try {
+                startForeground(NOTIFICATION_ID, buildNotification(s != null ? s
+                        : new Song("", getString(R.string.app_name), ""), wantPlaying));
+                foreground = true;
+            } catch (RuntimeException e) {
+                Log.w(TAG, "startForeground: " + e);
+            }
+        }
         if (ACTION_TOGGLE.equals(action)) toggle();
         else if (ACTION_PLAY.equals(action)) play();
         else if (ACTION_PAUSE.equals(action)) pause();
@@ -329,7 +359,41 @@ public final class PlayerService extends Service implements Remote.Commands {
         else if (ACTION_PREVIOUS.equals(action)) previous();
         else if (ACTION_STOP.equals(action)) stop();
         else if (ACTION_KEY.equals(action)) key(intent.getIntExtra(EXTRA_KEY, 0));
+        else if (ACTION_LIKE.equals(action)) toggleLike();
+        else if (ACTION_WIDGET.equals(action)) {
+            widgetState = "";
+            updateWidget();
+        }
+        if (fromForegroundStart && !wantPlaying && foreground) {
+            stopForegroundCompat(queue.current() == null);
+            if (queue.current() == null) stopSelf();
+        }
         return START_NOT_STICKY;
+    }
+
+    private void toggleLike() {
+        Song s = queue.current();
+        if (s == null) return;
+        Library lib = Library.get(this);
+        lib.setLiked(s, !lib.isLiked(s.videoId));
+        updateWidget();
+    }
+
+    // ------------------------------------------------------------------ widget
+
+    private String widgetState = "";
+
+    /** Pushes the state to the home-screen widget, only when something it shows changed. */
+    private void updateWidget() {
+        Song s = queue.current();
+        boolean liked = s != null && Library.get(this).isLiked(s.videoId);
+        boolean hasArt = s != null && s.videoId.equals(artFor) && notificationArt != null;
+        String state = (s == null ? "" : s.videoId) + "|" + wantPlaying + "|" + liked + "|" + hasArt;
+        if (state.equals(widgetState)) return;
+        widgetState = state;
+        if (s != null) prefs.setLastSong(s.toJson().toString());
+        if (!PlayerWidget.hasWidgets(this)) return;
+        PlayerWidget.push(this, s, wantPlaying, liked, hasArt ? notificationArt : null);
     }
 
     @Override
@@ -339,7 +403,10 @@ public final class PlayerService extends Service implements Remote.Commands {
 
     @Override
     public void onDestroy() {
+        running = false;
         flushStats();
+        wantPlaying = false;
+        updateWidget();
         save();
         handler.removeCallbacksAndMessages(null);
         release(nxt);
@@ -1350,7 +1417,7 @@ public final class PlayerService extends Service implements Remote.Commands {
         int iconPx = images.px(64, Build.VERSION.SDK_INT >= 21 ? 256 : 192);
         Bitmap loaded = images.loadSync(s.thumb, lockPx);
         final Bitmap b = scaled(loaded, lockPx);
-        final Bitmap small = scaled(loaded, iconPx);
+        final Bitmap small = squared(loaded, iconPx); // square for the notification and widget
         handler.post(new Runnable() {
             @Override
             public void run() {
@@ -1362,6 +1429,18 @@ public final class PlayerService extends Service implements Remote.Commands {
                 updateControls(true);
             }
         });
+    }
+
+    /** Center-cropped to a square of {@code size} pixels (video thumbnails are 16:9). */
+    private static Bitmap squared(Bitmap b, int size) {
+        if (b == null) return null;
+        int side = Math.min(b.getWidth(), b.getHeight());
+        try {
+            Bitmap crop = Bitmap.createBitmap(b, (b.getWidth() - side) / 2, (b.getHeight() - side) / 2, side, side);
+            return side > size ? Bitmap.createScaledBitmap(crop, size, size, true) : crop;
+        } catch (OutOfMemoryError e) {
+            return null;
+        }
     }
 
     private static Bitmap scaled(Bitmap b, int max) {
@@ -1392,6 +1471,7 @@ public final class PlayerService extends Service implements Remote.Commands {
     }
 
     private void updateControls(boolean trackChanged) {
+        updateWidget();
         Song s = queue.current();
         if (s == null) return;
         if (!s.videoId.equals(artFor)) {
@@ -1435,6 +1515,8 @@ public final class PlayerService extends Service implements Remote.Commands {
     }
 
     private Notification buildNotification(Song s, boolean playing) {
+        // Android 5+: the MediaStyle notification (with its channel on 8+) needs the session.
+        if (Build.VERSION.SDK_INT >= 21) ensureRemote();
         Remote.NotificationData d = new Remote.NotificationData();
         d.title = s.title;
         d.text = s.artist;

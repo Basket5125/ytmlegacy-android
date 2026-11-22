@@ -46,6 +46,17 @@ Invidious instance or other middleman.
 - **Look and language**:
   - dark and light themes; following the system theme needs Android 10+;
   - app language: phone default, English or Polish.
+- **Home-screen widget** (4×1, resizable; also on the 4.2–4.4 lock screen), styled after Google
+  Play Music's: cover, like, previous, play/pause, next, then the title and artist.
+- **Stand mode**: a fullscreen screen for a phone or tablet on a dock. It shows the rounded cover,
+  title and artist on black, in portrait or landscape. It is built to use little battery: no
+  timers, optional dimming and a small pixel shift once a minute against burn-in.
+- **Listening statistics** (optional, kept only on the device): listening time, plays, top artists,
+  songs and albums, and listening by hour, for the last week, the last month and all time.
+  YouTube does not report genres, so there is no genre statistic.
+- **Queue reordering** by dragging the ☰ handle. The list scrolls by itself near its edges.
+- Swipe sideways on a page to move to the neighbouring tab.
+- Themes: dark, light, OLED (true black), and following the system theme on Android 10+.
 - Options that need a newer Android are greyed out and say which version they need.
 
 ## How audio plays

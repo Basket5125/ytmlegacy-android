@@ -114,6 +114,12 @@ public abstract class ListScreen extends Screen implements Rows.Callbacks {
         adapter.setRows(rows);
     }
 
+    /** Marks loading as finished without changing the rows. */
+    protected void loadDone() {
+        loaded = true;
+        busy = false;
+    }
+
     protected void setRows(List<Rows.Row> rows) {
         loaded = true;
         busy = false;

@@ -217,7 +217,9 @@ public final class Images {
         while (bounds.outWidth / (sample * 2) >= px && bounds.outHeight / (sample * 2) >= px) sample *= 2;
         BitmapFactory.Options o = new BitmapFactory.Options();
         o.inSampleSize = sample;
-        o.inPreferredConfig = px <= 400 ? Bitmap.Config.RGB_565 : Bitmap.Config.ARGB_8888;
+        // Covers are opaque JPEGs: RGB_565 halves memory (fewer evictions and re-decodes while
+        // scrolling). Only the large Now Playing / stand-mode covers keep full colour depth.
+        o.inPreferredConfig = px <= 720 ? Bitmap.Config.RGB_565 : Bitmap.Config.ARGB_8888;
         Bitmap b = BitmapFactory.decodeFile(file.getPath(), o);
         if (b == null && deleteBroken) file.delete();
         return b;

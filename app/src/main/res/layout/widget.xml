@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Home-screen widget, after the Google Play Music one: art and controls, a line, the song. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/w_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_bg"
+    android:orientation="vertical">
+
+    <!-- 4x1 by default (like Google Play Music's), resizable to two rows: the rows share the
+         height, the square cover follows the row height. -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1.6"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:id="@+id/w_art"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:adjustViewBounds="true"
+            android:background="#FF1E2A33"
+            android:contentDescription="@string/now_playing"
+            android:scaleType="centerCrop"
+            android:src="@drawable/ic_launcher" />
+
+        <ImageButton android:id="@+id/w_like" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:background="@drawable/widget_button_bg" android:contentDescription="@string/like" android:src="@drawable/ic_favorite_border" />
+        <ImageButton android:id="@+id/w_prev" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:background="@drawable/widget_button_bg" android:contentDescription="@string/action_previous" android:src="@drawable/ic_skip_previous" />
+        <ImageButton android:id="@+id/w_toggle" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:background="@drawable/widget_button_bg" android:contentDescription="@string/action_play" android:src="@drawable/ic_play" />
+        <ImageButton android:id="@+id/w_next" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:background="@drawable/widget_button_bg" android:contentDescription="@string/action_next" android:src="@drawable/ic_skip_next" />
+    </LinearLayout>
+
+    <!-- Plain View is not allowed in RemoteViews before Android 12: an empty ImageView draws the line. -->
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="1px"
+        android:background="#40FFFFFF"
+        android:contentDescription="@null" />
+
+    <TextView
+        android:id="@+id/w_text"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:background="@drawable/widget_button_bg"
+        android:ellipsize="end"
+        android:gravity="center_vertical"
+        android:paddingLeft="10dp"
+        android:paddingRight="10dp"
+        android:singleLine="true"
+        android:textColor="#FFFFFFFF"
+        android:textSize="14sp" />
+</LinearLayout>

@@ -11,5 +11,9 @@ public final class App extends Application {
         super.onCreate();
         com.ytmlegacy.android.data.Lang.applyToApp(this);
         Tls.install(this);
+        try {
+            com.ytmlegacy.android.player.PlayerWidget.refresh(this);
+        } catch (RuntimeException ignored) {
+        }
     }
 }
