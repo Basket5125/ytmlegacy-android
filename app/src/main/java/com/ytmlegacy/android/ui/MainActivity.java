@@ -122,6 +122,12 @@ public final class MainActivity extends Activity implements PlayerService.Listen
                 pop();
             }
         });
+        barLogo.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                selectTab(0);
+            }
+        });
         barSearchButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

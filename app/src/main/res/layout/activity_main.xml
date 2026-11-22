@@ -27,13 +27,16 @@
                 android:src="@drawable/ic_back"
                 android:visibility="gone" />
 
-            <ImageView
+            <!-- The app icon: a tap goes to Home (like the Holo "up to home" icon). -->
+            <ImageButton
                 android:id="@+id/bar_logo"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:layout_marginLeft="10dp"
-                android:layout_marginRight="4dp"
-                android:contentDescription="@null"
+                android:layout_width="48dp"
+                android:layout_height="match_parent"
+                android:layout_marginLeft="2dp"
+                android:background="@drawable/bar_button_bg"
+                android:contentDescription="@string/tab_home"
+                android:padding="8dp"
+                android:scaleType="fitCenter"
                 android:src="@drawable/ic_launcher" />
 
             <TextView
