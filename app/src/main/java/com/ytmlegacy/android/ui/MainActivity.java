@@ -340,6 +340,7 @@ public final class MainActivity extends Activity implements PlayerService.Listen
             for (Runnable r : run) r.run();
             onPlayerState();
             onQueueChanged();
+            if (npContainer.isOpen()) nowPlaying.update();
         }
 
         @Override

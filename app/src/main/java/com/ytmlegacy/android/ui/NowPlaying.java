@@ -325,10 +325,14 @@ final class NowPlaying {
     /** Full refresh (song or state changed). */
     void update() {
         PlayerService p = act.player();
-        Song s = p == null ? null : p.current();
+        // Not bound (the activity is in the background): keep what is shown, it is refreshed
+        // as soon as the player is connected again.
+        if (p == null) return;
+        Song s = p.current();
         if (s == null) {
             title.setText(R.string.nothing_playing);
             artist.setText("");
+            shownId = ""; // the next song must write its title again
             return;
         }
         if (!s.videoId.equals(shownId)) {
