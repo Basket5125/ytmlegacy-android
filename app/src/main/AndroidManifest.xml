@@ -64,6 +64,14 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".ui.StandActivity"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|screenLayout|uiMode"
+            android:exported="false"
+            android:label="@string/stand_mode"
+            android:launchMode="singleTop"
+            android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen" />
+
         <service
             android:name=".player.PlayerService"
             android:exported="false"

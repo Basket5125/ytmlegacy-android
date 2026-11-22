@@ -166,6 +166,10 @@ public final class Prefs {
     public int imageQualityMobile() { return p.getInt("img_mobile", 1); }
     public void setImageQualityMobile(int v) { put("img_mobile", v); }
 
+    /** Dim the screen in the fullscreen stand mode (saves battery). */
+    public boolean standDim() { return p.getBoolean("stand_dim", true); }
+    public void setStandDim(boolean v) { put("stand_dim", v); }
+
     public int startTab() { return p.getInt("start_tab", 0); }
     public void setStartTab(int v) { put("start_tab", v); }
     public boolean keepScreenOn() { return p.getBoolean("screen_on", false); }

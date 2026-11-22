@@ -285,6 +285,12 @@ public final class SettingsScreen extends Screen {
                 build();
             }
         });
+        toggle(act.getString(R.string.set_stand_dim), act.getString(R.string.set_stand_dim_sum), prefs.standDim(), true,
+                null, new Toggled() {
+                    public void toggled(boolean on) {
+                        prefs.setStandDim(on);
+                    }
+                });
         toggle(act.getString(R.string.set_screen_on), null, prefs.keepScreenOn(), true, null, new Toggled() {
             public void toggled(boolean on) {
                 prefs.setKeepScreenOn(on);

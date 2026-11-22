@@ -147,6 +147,12 @@ public final class Actions {
     public void nowPlayingMenu(final Song s) {
         List<String> labels = new ArrayList<String>();
         List<Choice> choices = new ArrayList<Choice>();
+        labels.add(act.getString(R.string.stand_mode));
+        choices.add(new Choice() {
+            public void run() {
+                act.openStandMode();
+            }
+        });
         labels.add(act.getString(R.string.start_radio));
         choices.add(new Choice() {
             public void run() {

@@ -212,4 +212,7 @@
     <string name="img_high">Wysoka</string>
     <string name="img_max">Maksymalna</string>
     <string name="move">Przesuń</string>
+    <string name="stand_mode">Pełny ekran (tryb podstawki)</string>
+    <string name="set_stand_dim">Przyciemniaj ekran w trybie pełnoekranowym</string>
+    <string name="set_stand_dim_sum">Oszczędza baterię, gdy telefon stoi na podstawce</string>
 </resources>

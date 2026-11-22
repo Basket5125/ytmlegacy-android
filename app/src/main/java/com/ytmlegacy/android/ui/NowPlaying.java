@@ -186,6 +186,13 @@ final class NowPlaying {
                 if (s != null) act.actions().nowPlayingMenu(s);
             }
         });
+        // Tapping the cover opens the fullscreen stand mode.
+        art.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                act.openStandMode();
+            }
+        });
         artist.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

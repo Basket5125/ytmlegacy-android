@@ -210,4 +210,7 @@
     <string name="img_high">High</string>
     <string name="img_max">Maximum</string>
     <string name="move">Move</string>
+    <string name="stand_mode">Fullscreen (stand mode)</string>
+    <string name="set_stand_dim">Dim the screen in fullscreen mode</string>
+    <string name="set_stand_dim_sum">Saves battery when the phone stands on a dock</string>
 </resources>

@@ -560,6 +560,12 @@ public final class MainActivity extends Activity implements PlayerService.Listen
         npContainer.open();
     }
 
+    /** Fullscreen cover/title/artist on black, for a phone or tablet on a stand. */
+    public void openStandMode() {
+        if (player == null || player.current() == null) return;
+        startActivity(new Intent(this, StandActivity.class));
+    }
+
     public void closeNowPlaying() {
         npContainer.close();
     }
@@ -709,6 +715,7 @@ public final class MainActivity extends Activity implements PlayerService.Listen
     private static final int MENU_EQUALIZER = 4;
     private static final int MENU_SETTINGS = 5;
     private static final int MENU_EXIT = 6;
+    private static final int MENU_STAND = 7;
 
     @Override
     public boolean onCreateOptionsMenu(android.view.Menu menu) {
@@ -730,6 +737,7 @@ public final class MainActivity extends Activity implements PlayerService.Listen
         if (s != null) s.addMenu(menu);
         if (player != null && player.current() != null) {
             menu.add(0, MENU_TIMER, 30, R.string.sleep_timer).setIcon(R.drawable.ic_timer);
+            menu.add(0, MENU_STAND, 3, R.string.stand_mode).setIcon(R.drawable.ic_fullscreen);
         }
         menu.add(0, MENU_EQUALIZER, 31, R.string.set_equalizer).setIcon(R.drawable.ic_equalizer);
         if (tab != 3) menu.add(0, MENU_SETTINGS, 32, R.string.tab_settings).setIcon(R.drawable.ic_more);
@@ -748,6 +756,9 @@ public final class MainActivity extends Activity implements PlayerService.Listen
                 return true;
             case MENU_TIMER:
                 actions.sleepTimer();
+                return true;
+            case MENU_STAND:
+                openStandMode();
                 return true;
             case MENU_EQUALIZER:
                 push(new EqualizerScreen());
