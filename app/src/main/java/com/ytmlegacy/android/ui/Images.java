@@ -52,7 +52,9 @@ public final class Images {
         dir.mkdirs();
         long max = Runtime.getRuntime().maxMemory();
         memoryLimit = Math.max(2L * 1024 * 1024, max / 8);
-        pool = new ThreadPoolExecutor(3, 3, 30, TimeUnit.SECONDS, new LinkedBlockingDeque<Runnable>() {
+        // One core (Android 2.x phones): two decoders are enough and keep the phone cooler.
+        int threads = Runtime.getRuntime().availableProcessors() > 1 ? 3 : 2;
+        pool = new ThreadPoolExecutor(threads, threads, 30, TimeUnit.SECONDS, new LinkedBlockingDeque<Runnable>() {
             @Override
             public boolean offer(Runnable r) {
                 return super.offerFirst(r);

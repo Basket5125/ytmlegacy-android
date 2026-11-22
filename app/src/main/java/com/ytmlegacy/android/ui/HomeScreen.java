@@ -34,22 +34,40 @@ public final class HomeScreen extends ListScreen {
         if (!shownCached) {
             // Show the copy saved last time at once; the fresh page replaces it when it arrives.
             shownCached = true;
+            final String id = explore ? "FEmusic_explore" : "FEmusic_home";
             run(new Task<Page>() {
                 @Override
                 protected Page work() {
-                    return InnerTube.get(act).cachedPage(explore ? "FEmusic_explore" : "FEmusic_home");
+                    return InnerTube.get(act).cachedPage(id);
                 }
 
                 @Override
                 protected void done(Page page) {
-                    if (page == null || fresh) return;
+                    if (page == null) {
+                        fetchFresh();
+                        return;
+                    }
                     List<Rows.Row> rows = new ArrayList<Rows.Row>();
                     if (!explore) addRecent(rows);
                     rows.addAll(Rows.fromPage(page, false));
                     showCached(rows);
+                    // A copy younger than half an hour is good enough: parsing the same big
+                    // answer again is what heats old single-core phones. Reselecting refreshes.
+                    if (InnerTube.get(act).cachedAge(id) < 30L * 60 * 1000) loadDone();
+                    else fetchFresh();
+                }
+
+                @Override
+                protected void failed(Exception e) {
+                    fetchFresh();
                 }
             });
+            return;
         }
+        fetchFresh();
+    }
+
+    private void fetchFresh() {
         run(new Task<Page>() {
             @Override
             protected Page work() throws Exception {

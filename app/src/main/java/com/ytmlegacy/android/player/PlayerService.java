@@ -95,6 +95,8 @@ public final class PlayerService extends Service implements Remote.Commands {
         int pendingSeek;
         long startedAt;
         boolean buffering;
+        /** Why the song could not be loaded (classic path), shown to the user. */
+        String loadError;
 
         Track(Song song, int quality) {
             this.song = song;
@@ -108,8 +110,55 @@ public final class PlayerService extends Service implements Remote.Commands {
             mp.setOnCompletionListener(this);
             mp.setOnErrorListener(this);
             mp.setOnInfoListener(this);
+            if (prefs.needClassicMp4()) {
+                openClassic();
+                return;
+            }
             mp.setDataSource(StreamProxy.get(PlayerService.this).url(song.videoId, quality));
             mp.prepareAsync();
+        }
+
+        /**
+         * Android 2.x: the song has to be complete and repacked before the player can read it.
+         * It is opened as a file (by descriptor: mediaserver cannot read the app's files by path),
+         * not over the local HTTP server, whose wait made the old player give up (error -1004).
+         */
+        private void openClassic() {
+            classicLoader.execute(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        final File file = AudioCache.get(PlayerService.this).classicFile(song.videoId, quality);
+                        handler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                if (released) return;
+                                try {
+                                    java.io.FileInputStream in = new java.io.FileInputStream(file);
+                                    try {
+                                        mp.setDataSource(in.getFD());
+                                    } finally {
+                                        in.close();
+                                    }
+                                    mp.prepareAsync();
+                                } catch (Exception e) {
+                                    loadError = e.toString();
+                                    failed(Track.this, loadError);
+                                }
+                            }
+                        });
+                    } catch (final Exception e) {
+                        handler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                if (released) return;
+                                loadError = e.getMessage() == null ? e.toString() : e.getMessage();
+                                failed(Track.this, loadError);
+                            }
+                        });
+                    }
+                }
+            });
         }
 
         void release() {
@@ -195,6 +244,8 @@ public final class PlayerService extends Service implements Remote.Commands {
     private final List<Listener> listeners = new ArrayList<Listener>();
     private final ExecutorService background = Executors.newSingleThreadExecutor();
     private final ExecutorService prefetcher = Executors.newSingleThreadExecutor();
+    /** Loads songs for Android 2.x players (download + repack), current and next. */
+    private final ExecutorService classicLoader = Executors.newFixedThreadPool(2);
 
     private Prefs prefs;
     private AudioManager audio;
@@ -423,6 +474,7 @@ public final class PlayerService extends Service implements Remote.Commands {
         stopForegroundCompat(true);
         background.shutdown();
         prefetcher.shutdown();
+        classicLoader.shutdown();
         super.onDestroy();
     }
 
@@ -952,7 +1004,7 @@ public final class PlayerService extends Service implements Remote.Commands {
         if (t != cur) return;
         String id = t.song.videoId;
         StreamProxy proxy = StreamProxy.get(this);
-        String proxyError = proxy.lastError(id);
+        String proxyError = t.loadError != null ? t.loadError : proxy.lastError(id);
         // Only a song the player actually received and still refused points at the format.
         boolean formatProblem = proxyError.length() == 0 && proxy.served(id) && online();
         if (formatProblem && !formatRetried.contains(id)) {
@@ -1256,6 +1308,10 @@ public final class PlayerService extends Service implements Remote.Commands {
                 AudioCache cache = AudioCache.get(PlayerService.this);
                 cache.setKeep(keep);
                 cache.cancelExcept(keep);
+                // The song being played gets all the bandwidth first; on a slow phone/Wi-Fi the
+                // next songs fetched at the same time made it start several times slower.
+                if (current != null) loadArt(current); // the cover must not wait for the download
+                if (current != null && !waitUntilCached(current, cache)) return;
                 for (Song s : upcoming) {
                     if (Library.get(PlayerService.this).isDownloaded(s.videoId)) continue;
                     int q = qualityFor(s);
@@ -1270,6 +1326,22 @@ public final class PlayerService extends Service implements Remote.Commands {
                 if (current != null) loadArt(current);
             }
         });
+    }
+
+    /** Waits (on the prefetch thread) until the playing song is on disk; false when it changed. */
+    private boolean waitUntilCached(Song song, AudioCache cache) {
+        long end = SystemClock.elapsedRealtime() + 180000;
+        int[] itags = Streams.itagsFor(qualityFor(song));
+        while (SystemClock.elapsedRealtime() < end) {
+            if (queue.current() != song) return false;
+            if (Library.get(this).isDownloaded(song.videoId) || cache.cached(song.videoId, itags) != null) return true;
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private void addHistory(final Song s) {

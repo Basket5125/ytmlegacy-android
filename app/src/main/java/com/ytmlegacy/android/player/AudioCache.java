@@ -117,15 +117,54 @@ public final class AudioCache {
 
     /** The running or new fetch of a stream into the cache. */
     public Fetch fetch(Streams.Stream stream) {
+        return fetch(stream, false);
+    }
+
+    /**
+     * {@code parallel}: download the file over several connections at once (old phones get
+     * far more out of their Wi-Fi that way). Only for files that are used when complete.
+     */
+    public Fetch fetch(Streams.Stream stream, boolean parallel) {
         String key = stream.videoId + "_" + stream.itag;
         synchronized (fetches) {
             Fetch f = fetches.get(key);
             if (f != null && !f.failed && !f.cancelled) return f;
             f = new Fetch(stream, new File(area(), name(stream.videoId, stream.itag, stream.classic ? "mp4" : stream.extension())));
+            f.parallel = parallel && stream.length > 4 * CHUNK_PART;
             fetches.put(key, f);
             pool.execute(f);
             return f;
         }
+    }
+
+    private static final int CHUNK_PART = 256 * 1024;
+    private static final int PARTS = 3;
+    private final ExecutorService partPool = Executors.newCachedThreadPool(new ThreadFactory() {
+        private int n;
+
+        @Override
+        public synchronized Thread newThread(Runnable r) {
+            Thread t = new Thread(r, "audio-part-" + (++n));
+            t.setDaemon(true);
+            return t;
+        }
+    });
+
+    /**
+     * A complete, classic-MP4 file of the song, for players that cannot read fragments
+     * (Android 2.x): a download, the cache, or fetched now over parallel connections. Blocks.
+     */
+    public File classicFile(String videoId, int quality) throws Exception {
+        File f = com.ytmlegacy.android.data.Library.get(context).downloadedFile(videoId);
+        if (f != null && !f.getName().endsWith(".webm")) return f.getName().endsWith(".m4a") ? classicOf(f) : f;
+        f = cached(videoId, Streams.itagsFor(quality));
+        if (f != null && !f.getName().endsWith(".webm")) return f.getName().endsWith(".m4a") ? classicOf(f) : f;
+        Streams.Stream st = Streams.get(context).resolve(videoId, quality, false);
+        Fetch fetch = fetch(st, true);
+        if (!fetch.awaitComplete(240000)) {
+            throw new IOException(fetch.error().length() > 0 ? fetch.error() : "download timed out");
+        }
+        return st.classic ? fetch.target : classicOf(fetch.target);
     }
 
     /** Stops background fetches of videos not in {@code wanted}. */
@@ -145,6 +184,7 @@ public final class AudioCache {
         private volatile long total;
         private volatile long have;
         volatile boolean complete;
+        volatile boolean parallel;
         volatile boolean failed;
         volatile boolean cancelled;
         private volatile String error = "";
@@ -154,6 +194,10 @@ public final class AudioCache {
             this.target = target;
             this.part = new File(target.getPath() + ".part");
             this.total = stream.length;
+        }
+
+        void runParallel() {
+            runParallelImpl(this);
         }
 
         public void cancel() {
@@ -228,6 +272,10 @@ public final class AudioCache {
 
         @Override
         public void run() {
+            if (parallel) {
+                runParallel();
+                return;
+            }
             Streams.Stream current = stream;
             RandomAccessFile out = null;
             try {
@@ -316,6 +364,120 @@ public final class AudioCache {
                     }
                 }
             }
+        }
+    }
+
+    /** The whole file over {@link #PARTS} connections, each writing its own byte range. */
+    private void runParallelImpl(final Fetch f) {
+        final long length = f.stream.length;
+        final java.util.concurrent.atomic.AtomicReference<Streams.Stream> link =
+                new java.util.concurrent.atomic.AtomicReference<Streams.Stream>(f.stream);
+        final java.util.concurrent.atomic.AtomicReference<Exception> failure =
+                new java.util.concurrent.atomic.AtomicReference<Exception>();
+        final java.util.concurrent.CountDownLatch done = new java.util.concurrent.CountDownLatch(PARTS);
+        try {
+            RandomAccessFile pre = new RandomAccessFile(f.part, "rw");
+            try {
+                pre.setLength(length);
+            } finally {
+                pre.close();
+            }
+            long size = (length + PARTS - 1) / PARTS;
+            for (int i = 0; i < PARTS; i++) {
+                final long from = i * size;
+                final long to = Math.min(length, from + size) - 1;
+                partPool.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            if (from <= to) downloadRange(f, link, from, to);
+                        } catch (Exception e) {
+                            failure.compareAndSet(null, e);
+                        } finally {
+                            done.countDown();
+                        }
+                    }
+                });
+            }
+            done.await();
+            if (f.cancelled) {
+                f.part.delete();
+                return;
+            }
+            if (failure.get() != null) throw failure.get();
+            if (!f.part.renameTo(f.target)) throw new IOException("rename failed");
+            synchronized (f) {
+                f.have = length;
+                f.total = length;
+                f.complete = true;
+                f.notifyAll();
+            }
+            Log.i(TAG, "cached " + f.target.getName() + " (" + length / 1024 + " KB, " + PARTS + " connections)");
+            trim();
+        } catch (Exception e) {
+            Log.w(TAG, "fetch " + f.stream.videoId + " failed: " + e);
+            f.error = e.getMessage() == null ? e.toString() : e.getMessage();
+            synchronized (f) {
+                f.failed = true;
+                f.notifyAll();
+            }
+            f.part.delete();
+        } finally {
+            synchronized (fetches) {
+                String key = f.stream.videoId + "_" + f.stream.itag;
+                if (fetches.get(key) == f && !f.complete) fetches.remove(key);
+            }
+        }
+    }
+
+    private void downloadRange(Fetch f, java.util.concurrent.atomic.AtomicReference<Streams.Stream> link,
+                               long from, long to) throws Exception {
+        RandomAccessFile out = new RandomAccessFile(f.part, "rw");
+        try {
+            long pos = from;
+            int retries = 0;
+            byte[] buffer = new byte[32768];
+            while (pos <= to && !f.cancelled) {
+                long end = Math.min(to, pos + CHUNK - 1);
+                HttpURLConnection conn = null;
+                try {
+                    Streams.Stream s = link.get();
+                    conn = Http.openRange(s.url, s.userAgent, pos, end, 10000, 20000);
+                    InputStream in = conn.getInputStream();
+                    out.seek(pos);
+                    long want = end - pos + 1;
+                    int n;
+                    while (want > 0 && !f.cancelled && (n = in.read(buffer, 0, (int) Math.min(buffer.length, want))) > 0) {
+                        out.write(buffer, 0, n);
+                        pos += n;
+                        want -= n;
+                    }
+                    in.close();
+                    retries = 0;
+                } catch (Http.StatusException e) {
+                    if ((e.status == 403 || e.status == 410 || e.status == 401) && retries++ < 3) {
+                        synchronized (link) {
+                            if (link.get().url.equals(f.stream.url) || retries > 1) {
+                                Streams.get(context).forget(f.stream.videoId);
+                                Streams.Stream fresh = Streams.get(context).resolve(f.stream.videoId,
+                                        qualityOf(f.stream.itag), f.stream.isWebm());
+                                if (fresh.itag != f.stream.itag) throw new IOException("stream changed format");
+                                link.set(fresh);
+                            }
+                        }
+                    } else {
+                        throw e;
+                    }
+                } catch (IOException e) {
+                    if (f.cancelled) break;
+                    if (++retries > 5) throw e;
+                    Thread.sleep(700L * retries);
+                } finally {
+                    if (conn != null) conn.disconnect();
+                }
+            }
+        } finally {
+            out.close();
         }
     }
 

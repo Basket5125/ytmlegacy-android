@@ -45,6 +45,12 @@ public final class InnerTube {
         return new java.io.File(pages, browseId + "_" + prefs.language() + "_" + prefs.region() + ".json");
     }
 
+    /** Age in ms of the saved Home/Explore page, or Long.MAX_VALUE when there is none. */
+    public long cachedAge(String browseId) {
+        java.io.File f = pageFile(browseId);
+        return f.exists() ? System.currentTimeMillis() - f.lastModified() : Long.MAX_VALUE;
+    }
+
     /** The last saved Home/Explore page (at most 3 days old), or null. */
     public Page cachedPage(String browseId) {
         java.io.File f = pageFile(browseId);
