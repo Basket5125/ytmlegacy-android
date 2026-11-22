@@ -34,7 +34,7 @@ public final class Library extends SQLiteOpenHelper {
     private Set<String> liked;
 
     private Library(Context context) {
-        super(context, "library.db", null, 1);
+        super(context, "library.db", null, 2);
         this.context = context;
     }
 
@@ -56,6 +56,7 @@ public final class Library extends SQLiteOpenHelper {
                 + "itag INTEGER, size INTEGER, state INTEGER NOT NULL, added INTEGER NOT NULL, error TEXT)");
         db.execSQL("CREATE TABLE history (video_id TEXT PRIMARY KEY, json TEXT NOT NULL, played INTEGER NOT NULL)");
         db.execSQL("CREATE TABLE searches (query TEXT PRIMARY KEY, at INTEGER NOT NULL)");
+        createPlays(db);
         ContentValues v = new ContentValues();
         v.put("_id", LIKED_ID);
         v.put("name", context.getString(com.ytmlegacy.android.R.string.liked_songs));
@@ -66,6 +67,112 @@ public final class Library extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        if (oldVersion < 2) createPlays(db);
+    }
+
+    /** Listening statistics: one row per listening session of a song. */
+    private static void createPlays(SQLiteDatabase db) {
+        db.execSQL("CREATE TABLE IF NOT EXISTS plays (_id INTEGER PRIMARY KEY AUTOINCREMENT, video_id TEXT NOT NULL, "
+                + "artist TEXT, artist_id TEXT, album TEXT, album_id TEXT, json TEXT NOT NULL, "
+                + "seconds INTEGER NOT NULL, at INTEGER NOT NULL)");
+        db.execSQL("CREATE INDEX IF NOT EXISTS plays_at ON plays(at)");
+    }
+
+    // ------------------------------------------------------------------ listening statistics
+
+    /** Starts a listening session; returns its row id. */
+    public long startPlay(Song s, int seconds) {
+        ContentValues v = new ContentValues();
+        v.put("video_id", s.videoId);
+        v.put("artist", s.artist);
+        v.put("artist_id", s.artistId);
+        v.put("album", s.album);
+        v.put("album_id", s.albumId);
+        v.put("json", s.toJson().toString());
+        v.put("seconds", seconds);
+        v.put("at", System.currentTimeMillis());
+        return getWritableDatabase().insert("plays", null, v);
+    }
+
+    public void addPlaySeconds(long row, int seconds) {
+        getWritableDatabase().execSQL("UPDATE plays SET seconds = seconds + ? WHERE _id = ?",
+                new Object[]{seconds, row});
+    }
+
+    public void clearStats() {
+        getWritableDatabase().delete("plays", null, null);
+    }
+
+    /** A song counts as played after this much listening. */
+    public static final int PLAYED_SECONDS = 30;
+
+    public static final class Stats {
+        public long seconds;
+        public int plays;
+        public int songs;
+        public int artists;
+        public int days;
+        public final List<String[]> topArtists = new ArrayList<String[]>(); // name, id, seconds
+        public final List<Object[]> topSongs = new ArrayList<Object[]>();   // Song, plays, seconds
+        public final List<String[]> topAlbums = new ArrayList<String[]>();  // name, id, artist, seconds, thumb
+        public final long[] byHour = new long[24];
+    }
+
+    /** Statistics since a time (0 = all time). */
+    public Stats stats(long since) {
+        Stats st = new Stats();
+        SQLiteDatabase db = getReadableDatabase();
+        String[] a = {String.valueOf(since)};
+        Cursor c = db.rawQuery("SELECT COALESCE(SUM(seconds),0), "
+                + "COALESCE(SUM(CASE WHEN seconds >= " + PLAYED_SECONDS + " THEN 1 ELSE 0 END),0), "
+                + "COUNT(DISTINCT video_id), COUNT(DISTINCT CASE WHEN artist != '' THEN artist END), "
+                + "COUNT(DISTINCT date(at / 1000, 'unixepoch', 'localtime')) FROM plays WHERE at >= ?", a);
+        try {
+            if (c.moveToFirst()) {
+                st.seconds = c.getLong(0);
+                st.plays = c.getInt(1);
+                st.songs = c.getInt(2);
+                st.artists = c.getInt(3);
+                st.days = c.getInt(4);
+            }
+        } finally {
+            c.close();
+        }
+        c = db.rawQuery("SELECT artist, MAX(artist_id), SUM(seconds) s FROM plays WHERE at >= ? AND artist != '' "
+                + "GROUP BY artist ORDER BY s DESC LIMIT 5", a);
+        try {
+            while (c.moveToNext()) st.topArtists.add(new String[]{c.getString(0), nz(c.getString(1)), c.getString(2)});
+        } finally {
+            c.close();
+        }
+        c = db.rawQuery("SELECT MAX(json), SUM(CASE WHEN seconds >= " + PLAYED_SECONDS + " THEN 1 ELSE 0 END) p, "
+                + "SUM(seconds) s FROM plays WHERE at >= ? GROUP BY video_id ORDER BY p DESC, s DESC LIMIT 5", a);
+        try {
+            while (c.moveToNext()) st.topSongs.add(new Object[]{parse(c.getString(0)), c.getInt(1), c.getLong(2)});
+        } finally {
+            c.close();
+        }
+        c = db.rawQuery("SELECT album, MAX(album_id), MAX(artist), SUM(seconds) s, MAX(json) FROM plays "
+                + "WHERE at >= ? AND album != '' GROUP BY album ORDER BY s DESC LIMIT 5", a);
+        try {
+            while (c.moveToNext()) {
+                st.topAlbums.add(new String[]{c.getString(0), nz(c.getString(1)), nz(c.getString(2)),
+                        c.getString(3), parse(c.getString(4)).thumb});
+            }
+        } finally {
+            c.close();
+        }
+        c = db.rawQuery("SELECT CAST(strftime('%H', at / 1000, 'unixepoch', 'localtime') AS INTEGER), SUM(seconds) "
+                + "FROM plays WHERE at >= ? GROUP BY 1", a);
+        try {
+            while (c.moveToNext()) {
+                int h = c.getInt(0);
+                if (h >= 0 && h < 24) st.byHour[h] = c.getLong(1);
+            }
+        } finally {
+            c.close();
+        }
+        return st;
     }
 
     // ------------------------------------------------------------------ change listeners

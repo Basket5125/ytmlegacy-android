@@ -340,6 +340,24 @@ public final class SettingsScreen extends Screen {
                 Ui.toast(act, R.string.cleared);
             }
         });
+        toggle(act.getString(R.string.set_stats), act.getString(R.string.set_stats_sum), prefs.stats(), true, null,
+                new Toggled() {
+                    public void toggled(boolean on) {
+                        prefs.setStats(on);
+                    }
+                });
+        action(act.getString(R.string.set_stats_clear), null, new Runnable() {
+            public void run() {
+                Ui.dialog(act).setMessage(R.string.set_stats_clear_q)
+                        .setPositiveButton(R.string.delete, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface d, int w) {
+                                Library.get(act).clearStats();
+                                Ui.toast(act, R.string.cleared);
+                            }
+                        }).setNegativeButton(R.string.cancel, null).show();
+            }
+        });
         action(act.getString(R.string.set_reset_visitor), act.getString(R.string.set_reset_visitor_sum), new Runnable() {
             public void run() {
                 prefs.setVisitorData("");

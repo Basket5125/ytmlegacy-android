@@ -52,6 +52,14 @@ public final class LibraryScreen extends ListScreen {
                         act.push(new DownloadsScreen());
                     }
                 }));
+        if (Prefs.get(act).stats()) {
+            rows.add(Rows.action(R.drawable.ic_stats, act.getString(R.string.stats), null, null, new Runnable() {
+                @Override
+                public void run() {
+                    act.push(new StatsScreen());
+                }
+            }));
+        }
         if (Prefs.get(act).playHistory()) {
             rows.add(Rows.action(R.drawable.ic_history, act.getString(R.string.history), null, null, new Runnable() {
                 @Override

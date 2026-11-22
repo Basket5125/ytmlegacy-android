@@ -213,4 +213,27 @@
     <string name="stand_mode">Fullscreen (stand mode)</string>
     <string name="set_stand_dim">Dim the screen in fullscreen mode</string>
     <string name="set_stand_dim_sum">Saves battery when the phone stands on a dock</string>
+    <string name="stats">Listening statistics</string>
+    <string name="stats_week">Week</string>
+    <string name="stats_month">Month</string>
+    <string name="stats_all">All time</string>
+    <string name="stats_time">Listening time</string>
+    <string name="stats_plays">Plays</string>
+    <string name="stats_songs">Songs</string>
+    <string name="stats_artists">Artists</string>
+    <string name="stats_days">Days</string>
+    <string name="stats_top_artists">Top artists</string>
+    <string name="stats_top_songs">Top songs</string>
+    <string name="stats_top_albums">Top albums</string>
+    <string name="stats_peak">You listen most between %s</string>
+    <string name="stats_empty">Nothing played in this period yet.</string>
+    <string name="stats_off">Listening statistics are turned off in Settings.</string>
+    <string name="set_stats">Listening statistics</string>
+    <string name="set_stats_sum">Minutes, top artists, songs and albums; kept only on this device</string>
+    <string name="set_stats_clear">Clear listening statistics</string>
+    <string name="set_stats_clear_q">Delete all listening statistics?</string>
+    <plurals name="plays">
+        <item quantity="one">%d play</item>
+        <item quantity="other">%d plays</item>
+    </plurals>
 </resources>

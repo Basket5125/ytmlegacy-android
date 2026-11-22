@@ -79,7 +79,7 @@ public final class StandActivity extends Activity implements PlayerService.Liste
         FrameLayout root = new FrameLayout(this);
         root.setBackgroundColor(0xFF000000);
         stand = new StandLayout(this);
-        art = new SquareImageView(this);
+        art = new RoundedImageView(this);
         art.setScaleType(ImageView.ScaleType.CENTER_CROP);
         LinearLayout texts = new LinearLayout(this);
         texts.setOrientation(LinearLayout.VERTICAL);

@@ -215,4 +215,29 @@
     <string name="stand_mode">Pełny ekran (tryb podstawki)</string>
     <string name="set_stand_dim">Przyciemniaj ekran w trybie pełnoekranowym</string>
     <string name="set_stand_dim_sum">Oszczędza baterię, gdy telefon stoi na podstawce</string>
+    <string name="stats">Statystyki słuchania</string>
+    <string name="stats_week">Tydzień</string>
+    <string name="stats_month">Miesiąc</string>
+    <string name="stats_all">Od początku</string>
+    <string name="stats_time">Czas słuchania</string>
+    <string name="stats_plays">Odtworzenia</string>
+    <string name="stats_songs">Utwory</string>
+    <string name="stats_artists">Wykonawcy</string>
+    <string name="stats_days">Dni</string>
+    <string name="stats_top_artists">Najczęściej słuchani wykonawcy</string>
+    <string name="stats_top_songs">Ulubione utwory</string>
+    <string name="stats_top_albums">Ulubione albumy</string>
+    <string name="stats_peak">Najczęściej słuchasz w godzinach %s</string>
+    <string name="stats_empty">W tym okresie nic jeszcze nie grało.</string>
+    <string name="stats_off">Statystyki słuchania są wyłączone w ustawieniach.</string>
+    <string name="set_stats">Statystyki słuchania</string>
+    <string name="set_stats_sum">Minuty, ulubieni wykonawcy, utwory i albumy; tylko na tym urządzeniu</string>
+    <string name="set_stats_clear">Wyczyść statystyki słuchania</string>
+    <string name="set_stats_clear_q">Usunąć wszystkie statystyki słuchania?</string>
+    <plurals name="plays">
+        <item quantity="one">%d odtworzenie</item>
+        <item quantity="few">%d odtworzenia</item>
+        <item quantity="many">%d odtworzeń</item>
+        <item quantity="other">%d odtworzenia</item>
+    </plurals>
 </resources>

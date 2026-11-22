@@ -339,6 +339,7 @@ public final class PlayerService extends Service implements Remote.Commands {
 
     @Override
     public void onDestroy() {
+        flushStats();
         save();
         handler.removeCallbacksAndMessages(null);
         release(nxt);
@@ -978,7 +979,71 @@ public final class PlayerService extends Service implements Remote.Commands {
         }
     };
 
+    // ------------------------------------------------------------------ listening statistics
+
+    /** One listening session of a song; its row is written on the background thread. */
+    private static final class PlaySession {
+        final Song song;
+        long row = -1;
+
+        PlaySession(Song song) {
+            this.song = song;
+        }
+    }
+
+    private PlaySession session;
+    private long statMs;
+    private long statLastTick;
+    private long statLastFlush;
+
+    /**
+     * Counts the seconds music is actually heard. Pausing does not end a session, so a song
+     * paused and resumed counts once; a different song starts a new one.
+     */
+    private void accountStats() {
+        long now = SystemClock.elapsedRealtime();
+        Song playing = prefs.stats() && isPlaying() && cur != null ? cur.song : null;
+        if (playing != null && (session == null || session.song != playing)) {
+            flushStats();
+            session = new PlaySession(playing);
+            statMs = 0;
+            statLastTick = now;
+            statLastFlush = now;
+            return;
+        }
+        if (playing != null) {
+            if (statLastTick > 0) statMs += Math.min(now - statLastTick, 2000);
+            statLastTick = now;
+            if (now - statLastFlush > 30000) flushStats();
+        } else {
+            statLastTick = 0;
+            if (statMs >= 1000) flushStats();
+        }
+    }
+
+    private void flushStats() {
+        statLastFlush = SystemClock.elapsedRealtime();
+        final PlaySession ps = session;
+        if (ps == null || statMs < 1000) return;
+        final int seconds = (int) (statMs / 1000);
+        statMs -= seconds * 1000L;
+        Runnable write = new Runnable() {
+            @Override
+            public void run() {
+                Library lib = Library.get(PlayerService.this);
+                if (ps.row < 0) ps.row = lib.startPlay(ps.song, seconds);
+                else lib.addPlaySeconds(ps.row, seconds);
+            }
+        };
+        try {
+            background.execute(write);
+        } catch (java.util.concurrent.RejectedExecutionException e) {
+            write.run(); // service shutting down
+        }
+    }
+
     private void onTick() {
+        accountStats();
         if (sleepAt > 0) {
             long left = sleepAt - SystemClock.elapsedRealtime();
             if (left <= 0) {

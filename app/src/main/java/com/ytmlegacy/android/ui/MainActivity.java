@@ -600,6 +600,26 @@ public final class MainActivity extends Activity implements PlayerService.Listen
     }
 
     public void selectTab(int index) {
+        int from = tab;
+        selectTabNow(index);
+        if (from >= 0 && from != index) slideIn(index > from ? 1 : -1);
+    }
+
+    /** The new tab's page glides in from the side it lies on (light: one view animation). */
+    private void slideIn(int direction) {
+        android.view.animation.AnimationSet set = new android.view.animation.AnimationSet(true);
+        set.addAnimation(new android.view.animation.TranslateAnimation(
+                android.view.animation.Animation.RELATIVE_TO_SELF, 0.18f * direction,
+                android.view.animation.Animation.RELATIVE_TO_SELF, 0f,
+                android.view.animation.Animation.RELATIVE_TO_SELF, 0f,
+                android.view.animation.Animation.RELATIVE_TO_SELF, 0f));
+        set.addAnimation(new android.view.animation.AlphaAnimation(0.4f, 1f));
+        set.setDuration(180);
+        set.setInterpolator(new android.view.animation.DecelerateInterpolator());
+        content.startAnimation(set);
+    }
+
+    private void selectTabNow(int index) {
         if (index == tab) {
             List<Screen> stack = stacks.get(tab);
             if (stack.size() > 1) {
@@ -775,6 +795,96 @@ public final class MainActivity extends Activity implements PlayerService.Listen
                 Screen s = top();
                 return (s != null && s.onMenu(item.getItemId())) || super.onOptionsItemSelected(item);
         }
+    }
+
+    // ------------------------------------------------------------------ swipe between tabs
+
+    private float swipeX;
+    private float swipeY;
+    private boolean swipeCandidate;
+    private boolean swiping;
+    private android.view.VelocityTracker swipeVelocity;
+
+    /**
+     * A horizontal swipe over the page switches to the neighbouring tab, unless it starts on
+     * something that scrolls sideways itself (carousels, sliders, filter chips).
+     */
+    @Override
+    public boolean dispatchTouchEvent(android.view.MotionEvent ev) {
+        int action = ev.getAction() & android.view.MotionEvent.ACTION_MASK;
+        if (action == android.view.MotionEvent.ACTION_DOWN) {
+            swiping = false;
+            swipeX = ev.getRawX();
+            swipeY = ev.getRawY();
+            swipeCandidate = tab >= 0 && !npContainer.isOpen() && inside(content, ev)
+                    && !scrollsSideways(content, (int) ev.getRawX(), (int) ev.getRawY());
+            if (swipeVelocity != null) swipeVelocity.recycle();
+            swipeVelocity = swipeCandidate ? android.view.VelocityTracker.obtain() : null;
+        }
+        if (swipeCandidate && swipeVelocity != null) {
+            swipeVelocity.addMovement(ev);
+            float dx = ev.getRawX() - swipeX;
+            float dy = ev.getRawY() - swipeY;
+            int slop = android.view.ViewConfiguration.get(this).getScaledTouchSlop();
+            if (!swiping && action == android.view.MotionEvent.ACTION_MOVE) {
+                if (Math.abs(dx) > slop * 2 && Math.abs(dx) > Math.abs(dy) * 2) {
+                    swiping = true;
+                    // The page stops whatever the finger had started there (row press, scroll).
+                    android.view.MotionEvent cancel = android.view.MotionEvent.obtain(ev);
+                    cancel.setAction(android.view.MotionEvent.ACTION_CANCEL);
+                    super.dispatchTouchEvent(cancel);
+                    cancel.recycle();
+                } else if (Math.abs(dy) > slop * 2) {
+                    swipeCandidate = false; // a vertical scroll
+                }
+            }
+            if (swiping) {
+                if (action == android.view.MotionEvent.ACTION_UP) {
+                    swipeVelocity.computeCurrentVelocity(1000);
+                    float vx = swipeVelocity.getXVelocity();
+                    float fling = 600 * getResources().getDisplayMetrics().density;
+                    boolean far = Math.abs(dx) > content.getWidth() * 0.18f;
+                    if ((far || Math.abs(vx) > fling) && Math.signum(vx == 0 ? dx : vx) == Math.signum(dx)) {
+                        int next = tab + (dx < 0 ? 1 : -1);
+                        if (next >= 0 && next < TABS) selectTab(next);
+                    }
+                }
+                if (action == android.view.MotionEvent.ACTION_UP || action == android.view.MotionEvent.ACTION_CANCEL) {
+                    swiping = false;
+                    swipeCandidate = false;
+                }
+                return true;
+            }
+        }
+        return super.dispatchTouchEvent(ev);
+    }
+
+    private static boolean inside(View v, android.view.MotionEvent ev) {
+        int[] at = new int[2];
+        v.getLocationOnScreen(at);
+        float x = ev.getRawX();
+        float y = ev.getRawY();
+        return x >= at[0] && x < at[0] + v.getWidth() && y >= at[1] && y < at[1] + v.getHeight();
+    }
+
+    /** True when the view under the point (or a parent of it) scrolls or slides sideways. */
+    private static boolean scrollsSideways(View v, int x, int y) {
+        if (v.getVisibility() != View.VISIBLE) return false;
+        int[] at = new int[2];
+        v.getLocationOnScreen(at);
+        if (x < at[0] || x >= at[0] + v.getWidth() || y < at[1] || y >= at[1] + v.getHeight()) return false;
+        if (v instanceof android.widget.AbsSeekBar || v instanceof EditText) return true;
+        if (v instanceof android.widget.HorizontalScrollView) {
+            android.view.ViewGroup g = (android.view.ViewGroup) v;
+            if (g.getChildCount() > 0 && g.getChildAt(0).getWidth() > v.getWidth()) return true;
+        }
+        if (v instanceof android.view.ViewGroup) {
+            android.view.ViewGroup g = (android.view.ViewGroup) v;
+            for (int i = g.getChildCount() - 1; i >= 0; i--) {
+                if (scrollsSideways(g.getChildAt(i), x, y)) return true;
+            }
+        }
+        return false;
     }
 
     @Override

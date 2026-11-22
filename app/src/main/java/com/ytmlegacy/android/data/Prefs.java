@@ -170,6 +170,10 @@ public final class Prefs {
     public boolean standDim() { return p.getBoolean("stand_dim", true); }
     public void setStandDim(boolean v) { put("stand_dim", v); }
 
+    /** Listening statistics, kept on this device only. */
+    public boolean stats() { return p.getBoolean("stats", true); }
+    public void setStats(boolean v) { put("stats", v); }
+
     public int startTab() { return p.getInt("start_tab", 0); }
     public void setStartTab(int v) { put("start_tab", v); }
     public boolean keepScreenOn() { return p.getBoolean("screen_on", false); }
