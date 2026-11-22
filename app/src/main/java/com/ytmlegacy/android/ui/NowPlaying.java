@@ -5,7 +5,6 @@ import android.media.AudioManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.AlphaAnimation;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.ImageButton;
@@ -46,7 +45,7 @@ final class NowPlaying {
     private final ImageButton repeat;
     private final ImageButton like;
     private final ImageButton download;
-    private final View queuePanel;
+    private final RevealLayout queuePanel;
     private final DragSortListView queueList;
     private final TextView queueTitle;
     private final View top;
@@ -74,7 +73,8 @@ final class NowPlaying {
         repeat = (ImageButton) container.findViewById(R.id.np_repeat);
         like = (ImageButton) container.findViewById(R.id.np_like);
         download = (ImageButton) container.findViewById(R.id.np_download);
-        queuePanel = container.findViewById(R.id.np_queue_panel);
+        queuePanel = (RevealLayout) container.findViewById(R.id.np_queue_panel);
+        if (MainActivity.isOledTheme(act)) container.findViewById(R.id.np_queue_body).setBackgroundColor(0xFF000000);
         queueList = (DragSortListView) container.findViewById(R.id.np_queue_list);
         queueTitle = (TextView) container.findViewById(R.id.np_queue_title);
         top = container.findViewById(R.id.np_top);
@@ -278,24 +278,18 @@ final class NowPlaying {
     }
 
     boolean queueShown() {
-        return queuePanel.getVisibility() == View.VISIBLE;
+        return queuePanel.isOpen();
     }
 
-    /** The queue gets the room of the title, artist and volume while it is open. */
-    private void roomForQueue(boolean queue) {
-        int v = queue ? View.GONE : View.VISIBLE;
-        title.setVisibility(v);
-        artist.setVisibility(v);
-        container.findViewById(R.id.np_volume_row).setVisibility(v);
+    /** Without animation: the player screen itself is closing. */
+    void hideQueueNow() {
+        queuePanel.hideNow();
+        Ui.tint((ImageView) container.findViewById(R.id.np_queue), IDLE);
     }
 
     void hideQueue() {
         if (!queueShown()) return;
-        roomForQueue(false);
-        AlphaAnimation a = new AlphaAnimation(1f, 0f);
-        a.setDuration(180);
-        queuePanel.startAnimation(a);
-        queuePanel.setVisibility(View.GONE);
+        queuePanel.close(null);
         Ui.tint((ImageView) container.findViewById(R.id.np_queue), IDLE);
     }
 
@@ -305,11 +299,7 @@ final class NowPlaying {
             return;
         }
         queueChanged();
-        roomForQueue(true);
-        AlphaAnimation a = new AlphaAnimation(0f, 1f);
-        a.setDuration(180);
-        queuePanel.setVisibility(View.VISIBLE);
-        queuePanel.startAnimation(a);
+        queuePanel.open();
         Ui.tint((ImageView) container.findViewById(R.id.np_queue), ACTIVE);
         PlayerService p = act.player();
         if (p != null) queueList.setSelectionFromTop(Math.max(0, p.queuePosition()), Ui.dp(act, 40));
@@ -392,8 +382,20 @@ final class NowPlaying {
         private int dragFrom = -1;
         private int dragTo = -1;
 
+        /** Rows whose song moved by one place since the last target, and which way. */
+        private int shiftLow = -1;
+        private int shiftHigh = -1;
+        private int shiftDir;
+
         @Override
         public void setDrag(int from, int to) {
+            if (from >= 0 && dragFrom == from && dragTo >= 0 && to != dragTo) {
+                shiftLow = Math.min(dragTo, to);
+                shiftHigh = Math.max(dragTo, to);
+                shiftDir = to > dragTo ? 1 : -1; // gap moved down: rows slide up into place
+            } else {
+                shiftLow = shiftHigh = -1;
+            }
             dragFrom = from;
             dragTo = to;
             notifyDataSetChanged();
@@ -444,6 +446,16 @@ final class NowPlaying {
             int index = real(position);
             // The gap where the dragged row would land.
             v.setVisibility(dragFrom >= 0 && position == dragTo ? View.INVISIBLE : View.VISIBLE);
+            if (position >= shiftLow && position <= shiftHigh && position != dragTo) {
+                // Slide the row into its new place instead of jumping there.
+                android.view.animation.TranslateAnimation slide = new android.view.animation.TranslateAnimation(
+                        0, 0, shiftDir * Ui.dp(act, 64), 0);
+                slide.setDuration(120);
+                slide.setInterpolator(new android.view.animation.DecelerateInterpolator());
+                v.startAnimation(slide);
+            } else if (v.getAnimation() != null && dragFrom < 0) {
+                v.clearAnimation();
+            }
             Song s = songs.get(index);
             TextView t = (TextView) v.findViewById(R.id.row_title);
             t.setText(s.title);

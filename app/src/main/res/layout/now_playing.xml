@@ -1,10 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/np"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/np_bg"
-    android:clickable="true"
+    android:clickable="true">
+
+<LinearLayout
+    android:id="@+id/np_content"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
     android:orientation="vertical">
 
     <LinearLayout
@@ -77,54 +82,6 @@
             android:contentDescription="@null"
             android:scaleType="centerCrop" />
 
-        <LinearLayout
-            android:id="@+id/np_queue_panel"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="#E60B0E11"
-            android:orientation="vertical"
-            android:visibility="gone">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="40dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:paddingLeft="16dp">
-
-                <TextView
-                    android:id="@+id/np_queue_title"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:singleLine="true"
-                    android:text="@string/up_next"
-                    android:textColor="@color/holo_blue"
-                    android:textSize="13sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/np_queue_clear"
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:background="@drawable/round_button_bg"
-                    android:gravity="center"
-                    android:paddingLeft="12dp"
-                    android:paddingRight="12dp"
-                    android:text="@string/clear_queue"
-                    android:textColor="#CCFFFFFF"
-                    android:textSize="12sp" />
-            </LinearLayout>
-
-            <com.ytmlegacy.android.ui.DragSortListView
-                android:id="@+id/np_queue_list"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1"
-                android:cacheColorHint="#00000000"
-                android:divider="#22FFFFFF"
-                android:dividerHeight="1px" />
-        </LinearLayout>
     </FrameLayout>
 
     <TextView
@@ -258,3 +215,61 @@
         <ImageButton android:id="@+id/np_more" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:background="@drawable/round_button_bg" android:contentDescription="@string/more" android:src="@drawable/ic_more" />
     </LinearLayout>
 </LinearLayout>
+
+    <!-- The queue unrolls from under the top bar down to the bottom of the screen. -->
+    <com.ytmlegacy.android.ui.RevealLayout
+        android:id="@+id/np_queue_panel"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="52dp"
+        android:visibility="gone">
+
+    <LinearLayout
+        android:id="@+id/np_queue_body"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#F70D1217"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingLeft="16dp">
+
+            <TextView
+                android:id="@+id/np_queue_title"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:singleLine="true"
+                android:text="@string/up_next"
+                android:textColor="@color/holo_blue"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/np_queue_clear"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:background="@drawable/round_button_bg"
+                android:gravity="center"
+                android:paddingLeft="12dp"
+                android:paddingRight="12dp"
+                android:text="@string/clear_queue"
+                android:textColor="#CCFFFFFF"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+    <com.ytmlegacy.android.ui.DragSortListView
+            android:id="@+id/np_queue_list"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:cacheColorHint="#00000000"
+            android:divider="#22FFFFFF"
+            android:dividerHeight="1px" />
+    </LinearLayout>
+    </com.ytmlegacy.android.ui.RevealLayout>
+</FrameLayout>

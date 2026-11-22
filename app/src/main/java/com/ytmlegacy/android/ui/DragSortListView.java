@@ -34,6 +34,9 @@ public class DragSortListView extends ListView {
     private final int maxScrollStep;
     private final Paint floatPaint = new Paint();
     private final Paint floatBack = new Paint();
+    private final Paint accent = new Paint();
+    private final Paint shadow = new Paint();
+    private int shadowSize;
     private boolean dragging;
     private int from = -1;
     private int to = -1;
@@ -51,8 +54,9 @@ public class DragSortListView extends ListView {
         float d = context.getResources().getDisplayMetrics().density;
         handleWidth = (int) (56 * d);
         maxScrollStep = (int) (14 * d);
-        floatPaint.setAlpha(235);
-        floatBack.setColor(0xCC1A3A4F);
+        floatBack.setColor(0xFF1C2A35);
+        accent.setColor(0xFF33B5E5);
+        shadowSize = (int) (8 * d);
     }
 
     public void setDropListener(DropListener l) {
@@ -136,17 +140,30 @@ public class DragSortListView extends ListView {
         if (count == 0) return;
         int center = (int) (touchY - grabOffset + itemHeight / 2f);
         center = Math.max(0, Math.min(getHeight() - 1, center));
-        int p = pointToPosition(getWidth() / 2, center);
-        if (p == INVALID_POSITION) {
-            View first = getChildAt(0);
-            p = first != null && center < first.getTop() ? getFirstVisiblePosition() : getLastVisiblePosition();
-        }
+        int p = rowAt(center);
+        if (p < 0) return;
         p = Math.max(0, Math.min(count - 1, p));
         if (p != to) {
             to = p;
             DragAdapter a = dragAdapter();
             if (a != null) a.setDrag(from, to);
         }
+    }
+
+    /**
+     * The row at a height, counting the hidden gap row too (pointToPosition skips invisible
+     * children, which made the target jump to the end while the finger was over the gap).
+     */
+    private int rowAt(int y) {
+        int n = getChildCount();
+        if (n == 0) return -1;
+        int first = getFirstVisiblePosition();
+        for (int i = 0; i < n; i++) {
+            View c = getChildAt(i);
+            int bottom = i + 1 < n ? getChildAt(i + 1).getTop() : c.getBottom();
+            if (y >= c.getTop() && y < bottom) return first + i;
+        }
+        return y < getChildAt(0).getTop() ? first : first + n - 1;
     }
 
     /** Pixels to scroll per frame for the finger's distance to an edge (0 outside the edge zones). */
@@ -213,8 +230,16 @@ public class DragSortListView extends ListView {
         super.dispatchDraw(canvas);
         if (!dragging) return;
         float top = Math.max(-itemHeight / 2f, Math.min(getHeight() - itemHeight / 2f, touchY - grabOffset));
+        // Opaque, lifted row: nothing of the rows below shows through it.
+        shadow.setShader(new android.graphics.LinearGradient(0, top - shadowSize, 0, top, 0x00000000, 0x80000000,
+                android.graphics.Shader.TileMode.CLAMP));
+        canvas.drawRect(0, top - shadowSize, getWidth(), top, shadow);
+        shadow.setShader(new android.graphics.LinearGradient(0, top + itemHeight, 0, top + itemHeight + shadowSize,
+                0x80000000, 0x00000000, android.graphics.Shader.TileMode.CLAMP));
+        canvas.drawRect(0, top + itemHeight, getWidth(), top + itemHeight + shadowSize, shadow);
         canvas.drawRect(0, top, getWidth(), top + itemHeight, floatBack);
         if (snapshot != null) canvas.drawBitmap(snapshot, 0, top, floatPaint);
+        canvas.drawRect(0, top, Math.max(3, shadowSize / 2), top + itemHeight, accent);
     }
 
     @Override

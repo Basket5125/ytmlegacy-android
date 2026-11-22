@@ -206,7 +206,7 @@ public final class MainActivity extends Activity implements PlayerService.Listen
 
             @Override
             public void onClosed() {
-                nowPlaying.hideQueue();
+                nowPlaying.hideQueueNow();
                 applyScreenOn();
             }
         });
