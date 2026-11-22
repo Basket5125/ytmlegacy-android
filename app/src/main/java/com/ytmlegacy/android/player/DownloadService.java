@@ -204,7 +204,7 @@ public final class DownloadService extends Service {
         Song saved = song.copy();
         if (song.thumb.length() > 0 && song.thumb.startsWith("http")) {
             try {
-                byte[] img = Http.get(Images.sized(song.thumb, 544), null, 8000, 15000, 4 * 1024 * 1024);
+                byte[] img = Http.get(Images.sized(song.thumb, 800), null, 8000, 15000, 4 * 1024 * 1024);
                 File cover = new File(dir, song.videoId + ".jpg");
                 FileOutputStream out = new FileOutputStream(cover);
                 try {

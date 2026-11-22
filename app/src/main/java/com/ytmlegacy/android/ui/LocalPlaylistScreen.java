@@ -60,7 +60,7 @@ public final class LocalPlaylistScreen extends ListScreen {
     private void bindHeader() {
         ImageView art = (ImageView) header.findViewById(R.id.ph_art);
         String thumb = songs.isEmpty() ? "" : songs.get(0).thumb;
-        Images.get(act).load(art, thumb, 360, Ui.attrResource(act, R.attr.ytmPlaceholder));
+        Images.get(act).load(art, thumb, Images.get(act).px(120, 720), Ui.attrResource(act, R.attr.ytmPlaceholder));
         ((TextView) header.findViewById(R.id.ph_title)).setText(title());
         header.findViewById(R.id.ph_artist).setVisibility(View.GONE);
         int seconds = 0;

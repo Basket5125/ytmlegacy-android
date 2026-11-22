@@ -10,7 +10,6 @@ import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -48,7 +47,7 @@ final class NowPlaying {
     private final ImageButton like;
     private final ImageButton download;
     private final View queuePanel;
-    private final ListView queueList;
+    private final DragSortListView queueList;
     private final TextView queueTitle;
     private final View top;
     private final View middle;
@@ -76,7 +75,7 @@ final class NowPlaying {
         like = (ImageButton) container.findViewById(R.id.np_like);
         download = (ImageButton) container.findViewById(R.id.np_download);
         queuePanel = container.findViewById(R.id.np_queue_panel);
-        queueList = (ListView) container.findViewById(R.id.np_queue_list);
+        queueList = (DragSortListView) container.findViewById(R.id.np_queue_list);
         queueTitle = (TextView) container.findViewById(R.id.np_queue_title);
         top = container.findViewById(R.id.np_top);
         middle = container.findViewById(R.id.np_middle);
@@ -238,6 +237,15 @@ final class NowPlaying {
             public void onStopTrackingTouch(SeekBar bar) { }
         });
         queueList.setAdapter(queueAdapter);
+        queueList.setDropListener(new DragSortListView.DropListener() {
+            @Override
+            public void onDrop(int from, int to) {
+                PlayerService p = act.player();
+                if (p == null) return;
+                queueAdapter.moveLocally(from, to); // no flicker while the service catches up
+                p.move(from, to);
+            }
+        });
         queueList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -273,8 +281,17 @@ final class NowPlaying {
         return queuePanel.getVisibility() == View.VISIBLE;
     }
 
+    /** The queue gets the room of the title, artist and volume while it is open. */
+    private void roomForQueue(boolean queue) {
+        int v = queue ? View.GONE : View.VISIBLE;
+        title.setVisibility(v);
+        artist.setVisibility(v);
+        container.findViewById(R.id.np_volume_row).setVisibility(v);
+    }
+
     void hideQueue() {
         if (!queueShown()) return;
+        roomForQueue(false);
         AlphaAnimation a = new AlphaAnimation(1f, 0f);
         a.setDuration(180);
         queuePanel.startAnimation(a);
@@ -288,6 +305,7 @@ final class NowPlaying {
             return;
         }
         queueChanged();
+        roomForQueue(true);
         AlphaAnimation a = new AlphaAnimation(0f, 1f);
         a.setDuration(180);
         queuePanel.setVisibility(View.VISIBLE);
@@ -299,7 +317,7 @@ final class NowPlaying {
 
     void queueChanged() {
         PlayerService p = act.player();
-        if (p == null) return;
+        if (p == null || queueList.isDragging()) return;
         queueAdapter.songs = p.queueSnapshot();
         queueAdapter.current = p.queuePosition();
         queueAdapter.notifyDataSetChanged();
@@ -323,7 +341,7 @@ final class NowPlaying {
             if (s.thumb.length() > 0) {
                 art.setScaleType(ImageView.ScaleType.CENTER_CROP);
                 art.clearColorFilter();
-                Images.get(act).load(art, s.thumb, 600, R.drawable.art_placeholder_dark);
+                Images.get(act).load(art, s.thumb, Images.get(act).px(340, 1200), R.drawable.art_placeholder_dark);
             } else {
                 art.setTag(R.id.tag_image_url, "");
                 art.setScaleType(ImageView.ScaleType.CENTER);
@@ -368,9 +386,38 @@ final class NowPlaying {
         loading.setVisibility(p.isLoading() ? View.VISIBLE : View.GONE);
     }
 
-    private final class QueueAdapter extends BaseAdapter {
+    private final class QueueAdapter extends BaseAdapter implements DragSortListView.DragAdapter {
         List<Song> songs = new ArrayList<Song>();
         int current;
+        private int dragFrom = -1;
+        private int dragTo = -1;
+
+        @Override
+        public void setDrag(int from, int to) {
+            dragFrom = from;
+            dragTo = to;
+            notifyDataSetChanged();
+        }
+
+        /** The queue index shown at a list position while a row is being dragged. */
+        private int real(int position) {
+            if (dragFrom < 0) return position;
+            if (position == dragTo) return dragFrom;
+            if (dragFrom < dragTo && position >= dragFrom && position < dragTo) return position + 1;
+            if (dragFrom > dragTo && position > dragTo && position <= dragFrom) return position - 1;
+            return position;
+        }
+
+        void moveLocally(int from, int to) {
+            if (from < 0 || to < 0 || from >= songs.size() || to >= songs.size()) return;
+            List<Song> copy = new ArrayList<Song>(songs);
+            copy.add(to, copy.remove(from));
+            songs = copy;
+            if (current == from) current = to;
+            else if (from < current && to >= current) current--;
+            else if (from > current && to <= current) current++;
+            notifyDataSetChanged();
+        }
 
         @Override
         public int getCount() {
@@ -390,27 +437,22 @@ final class NowPlaying {
         @Override
         public View getView(final int position, View v, ViewGroup parent) {
             if (v == null) {
-                v = LayoutInflater.from(act).inflate(R.layout.row_song, parent, false);
-                v.setBackgroundResource(R.drawable.item_bg_dark);
-                Ui.tint((ImageView) v.findViewById(R.id.row_more), IDLE);
+                v = LayoutInflater.from(act).inflate(R.layout.row_queue, parent, false);
+                Ui.tint((ImageView) v.findViewById(R.id.row_handle), 0x99FFFFFF);
                 Ui.tint((ImageView) v.findViewById(R.id.row_badge), ACTIVE);
-                ((TextView) v.findViewById(R.id.row_subtitle)).setTextColor(0x99FFFFFF);
-                ((TextView) v.findViewById(R.id.row_duration)).setTextColor(0x99FFFFFF);
             }
-            Song s = songs.get(position);
+            int index = real(position);
+            // The gap where the dragged row would land.
+            v.setVisibility(dragFrom >= 0 && position == dragTo ? View.INVISIBLE : View.VISIBLE);
+            Song s = songs.get(index);
             TextView t = (TextView) v.findViewById(R.id.row_title);
             t.setText(s.title);
-            t.setTextColor(position == current ? ACTIVE : position < current ? 0x80FFFFFF : 0xFFFFFFFF);
+            t.setTextColor(index == current ? ACTIVE : index < current ? 0x80FFFFFF : 0xFFFFFFFF);
             ((TextView) v.findViewById(R.id.row_subtitle)).setText(s.artist);
             ((TextView) v.findViewById(R.id.row_duration)).setText(s.durationSec > 0 ? Song.formatTime(s.durationSec) : "");
             v.findViewById(R.id.row_badge).setVisibility(Library.get(act).isDownloaded(s.videoId) ? View.VISIBLE : View.GONE);
-            Images.get(act).load((ImageView) v.findViewById(R.id.row_thumb), s.thumb, 120, R.drawable.art_placeholder_dark);
-            v.findViewById(R.id.row_more).setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    if (position < songs.size()) act.actions().queueMenu(songs.get(position), position);
-                }
-            });
+            Images.get(act).load((ImageView) v.findViewById(R.id.row_thumb), s.thumb, Images.get(act).px(48, 400),
+                    R.drawable.art_placeholder_dark);
             return v;
         }
     }

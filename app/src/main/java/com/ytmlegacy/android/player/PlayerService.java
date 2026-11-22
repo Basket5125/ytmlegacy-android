@@ -213,6 +213,8 @@ public final class PlayerService extends Service implements Remote.Commands {
     private boolean radioLoading;
     private boolean waitingForRadio;
     private boolean foreground;
+    /** True once started with startService: a service that is only bound dies with the activity. */
+    private boolean started;
     private boolean noisyRegistered;
     private int restoredPosition;
     private long sleepAt;
@@ -243,6 +245,40 @@ public final class PlayerService extends Service implements Remote.Commands {
             wifiLock.setReferenceCounted(false);
         }
         handler.post(tick);
+    }
+
+    /**
+     * Makes this a started service before music plays, so it keeps running in the background
+     * when the activity unbinds (playback may begin from a bound-only service, e.g. the mini
+     * player's play button after the app was closed with "Exit").
+     */
+    private void ensureStarted() {
+        if (started) return;
+        Intent self = new Intent(this, PlayerService.class);
+        try {
+            startService(self);
+            started = true;
+        } catch (RuntimeException e) {
+            // Android 8+ in the background: allowed as a foreground start; updateControls()
+            // calls startForeground() right after, well within the 5 s limit.
+            if (Build.VERSION.SDK_INT >= 26) {
+                try {
+                    Oreo.startForegroundService(this, self);
+                    started = true;
+                } catch (RuntimeException e2) {
+                    Log.w(TAG, "cannot start service: " + e2);
+                }
+            } else {
+                Log.w(TAG, "cannot start service: " + e);
+            }
+        }
+    }
+
+    @TargetApi(26)
+    private static final class Oreo {
+        static void startForegroundService(Context c, Intent i) {
+            c.startForegroundService(i);
+        }
     }
 
     private boolean remoteReady;
@@ -284,6 +320,7 @@ public final class PlayerService extends Service implements Remote.Commands {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        started = true;
         String action = intent == null ? null : intent.getAction();
         if (ACTION_TOGGLE.equals(action)) toggle();
         else if (ACTION_PLAY.equals(action)) play();
@@ -629,6 +666,7 @@ public final class PlayerService extends Service implements Remote.Commands {
         if (remote != null) remote.update(Remote.STOPPED, 0, 0, "", "", "", null, false);
         save();
         stateChanged(false);
+        started = false;
         stopSelf();
     }
 
@@ -738,6 +776,7 @@ public final class PlayerService extends Service implements Remote.Commands {
             return;
         }
         if (start) {
+            ensureStarted();
             ensureRemote();
             requestFocus();
             registerNoisy();
@@ -751,6 +790,7 @@ public final class PlayerService extends Service implements Remote.Commands {
 
     private void startCurrent() {
         if (cur == null || !cur.prepared) return;
+        ensureStarted();
         ensureRemote();
         if (!hasFocus) requestFocus();
         try {

@@ -157,7 +157,7 @@ public final class BrowseScreen extends ListScreen {
         boolean show = page.thumb.length() > 0 && (isCollection() || isArtist());
         header.setVisibility(show ? View.VISIBLE : View.GONE);
         if (!show) return;
-        Images.get(act).load((ImageView) header.findViewById(R.id.ph_art), page.thumb, 360,
+        Images.get(act).load((ImageView) header.findViewById(R.id.ph_art), page.thumb, Images.get(act).px(120, 720),
                 Ui.attrResource(act, R.attr.ytmPlaceholder));
         ((TextView) header.findViewById(R.id.ph_title)).setText(page.title);
         TextView artist = (TextView) header.findViewById(R.id.ph_artist);

@@ -202,4 +202,12 @@
     <string name="menu_exit">Exit</string>
     <string name="menu_refresh">Refresh</string>
     <string name="menu_options">Options</string>
+    <string name="theme_oled">OLED (true black)</string>
+    <string name="set_img_wifi">Cover quality on Wi-Fi</string>
+    <string name="set_img_mobile">Cover quality on mobile data</string>
+    <string name="img_low">Low (saves data)</string>
+    <string name="img_normal">Normal</string>
+    <string name="img_high">High</string>
+    <string name="img_max">Maximum</string>
+    <string name="move">Move</string>
 </resources>

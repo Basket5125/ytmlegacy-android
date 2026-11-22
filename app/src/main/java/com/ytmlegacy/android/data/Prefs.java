@@ -21,6 +21,7 @@ public final class Prefs {
     public static final int THEME_DARK = 0;
     public static final int THEME_LIGHT = 1;
     public static final int THEME_SYSTEM = 2;
+    public static final int THEME_OLED = 3;
 
     // Container compatibility
     public static final int COMPAT_AUTO = 0;
@@ -157,6 +158,13 @@ public final class Prefs {
     /** UI language: "" = the phone's, else "en"/"pl". */
     public String appLanguage() { return p.getString("app_lang", ""); }
     public void setAppLanguage(String v) { put("app_lang", v); }
+
+    /** Cover-art sharpness: 0 low, 1 normal, 2 high, 3 maximum. */
+    public static final float[] IMAGE_FACTORS = {0.6f, 1f, 1.5f, 2f};
+    public int imageQualityWifi() { return p.getInt("img_wifi", 2); }
+    public void setImageQualityWifi(int v) { put("img_wifi", v); }
+    public int imageQualityMobile() { return p.getInt("img_mobile", 1); }
+    public void setImageQualityMobile(int v) { put("img_mobile", v); }
 
     public int startTab() { return p.getInt("start_tab", 0); }
     public void setStartTab(int v) { put("start_tab", v); }

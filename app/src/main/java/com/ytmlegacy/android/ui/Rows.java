@@ -299,7 +299,7 @@ public final class Rows {
             boolean downloaded = item.song != null && Library.get(context).isDownloaded(item.song.videoId);
             v.findViewById(R.id.row_badge).setVisibility(downloaded ? View.VISIBLE : View.GONE);
             ImageView thumb = (ImageView) v.findViewById(R.id.row_thumb);
-            Images.get(context).load(thumb, item.thumb, 120, placeholder);
+            Images.get(context).load(thumb, item.thumb, Images.get(context).px(48, 400), placeholder);
             View more = v.findViewById(R.id.row_more);
             more.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -322,7 +322,8 @@ public final class Rows {
                 ((TextView) card.findViewById(R.id.card_title)).setText(item.title);
                 ((TextView) card.findViewById(R.id.card_subtitle)).setText(
                         item.subtitle.length() > 0 ? item.subtitle : typeName(item.type));
-                Images.get(context).load((ImageView) card.findViewById(R.id.card_art), item.thumb, 256, placeholder);
+                Images.get(context).load((ImageView) card.findViewById(R.id.card_art), item.thumb,
+                        Images.get(context).px(126, 720), placeholder);
                 card.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
@@ -387,7 +388,7 @@ public final class Rows {
             if (row.thumb.length() > 0) {
                 icon.setScaleType(ImageView.ScaleType.CENTER_CROP);
                 icon.clearColorFilter();
-                Images.get(context).load(icon, row.thumb, 120, placeholder);
+                Images.get(context).load(icon, row.thumb, Images.get(context).px(40, 300), placeholder);
             } else {
                 icon.setTag(R.id.tag_image_url, "");
                 icon.setScaleType(ImageView.ScaleType.CENTER);

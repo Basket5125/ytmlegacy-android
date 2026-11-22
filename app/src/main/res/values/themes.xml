@@ -27,6 +27,16 @@
         <item name="ytmDark">true</item>
     </style>
 
+    <!-- OLED: true black everywhere, so dark pixels are switched off on AMOLED screens. -->
+    <style name="Theme.YTM.Oled" parent="Theme.YTM.Dark">
+        <item name="android:windowBackground">@color/oled_bg</item>
+        <item name="android:colorBackground">@color/oled_bg</item>
+        <item name="ytmBackground">@color/oled_bg</item>
+        <item name="ytmSurface">@color/oled_bg</item>
+        <item name="ytmCard">@color/oled_card</item>
+        <item name="ytmDivider">@color/oled_divider</item>
+    </style>
+
     <style name="Theme.YTM.Light" parent="Base.YTM.Light">
         <item name="android:windowBackground">@color/light_bg</item>
         <item name="android:textColorPrimary">@color/light_text</item>

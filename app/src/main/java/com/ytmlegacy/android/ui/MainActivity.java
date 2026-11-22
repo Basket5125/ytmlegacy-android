@@ -86,6 +86,10 @@ public final class MainActivity extends Activity implements PlayerService.Listen
         return true;
     }
 
+    public static boolean isOledTheme(Context c) {
+        return Prefs.get(c).theme() == Prefs.THEME_OLED;
+    }
+
     // ------------------------------------------------------------------ lifecycle
 
     @Override
@@ -96,7 +100,8 @@ public final class MainActivity extends Activity implements PlayerService.Listen
     @Override
     protected void onCreate(Bundle state) {
         prefs = Prefs.get(this);
-        setTheme(isDarkTheme(this) ? R.style.Theme_YTM_Dark : R.style.Theme_YTM_Light);
+        setTheme(isOledTheme(this) ? R.style.Theme_YTM_Oled
+                : isDarkTheme(this) ? R.style.Theme_YTM_Dark : R.style.Theme_YTM_Light);
         super.onCreate(state);
         Tls.install(this);
         setVolumeControlStream(AudioManager.STREAM_MUSIC);
@@ -181,6 +186,10 @@ public final class MainActivity extends Activity implements PlayerService.Listen
         });
 
         npContainer = (DragDownLayout) findViewById(R.id.np_container);
+        if (isOledTheme(this)) {
+            findViewById(R.id.np).setBackgroundColor(0xFF000000);
+            if (Build.VERSION.SDK_INT >= 21) Lollipop.blackNavigationBar(this);
+        }
         nowPlaying = new NowPlaying(this, npContainer);
         npContainer.setListener(new DragDownLayout.Listener() {
             @Override
@@ -445,6 +454,13 @@ public final class MainActivity extends Activity implements PlayerService.Listen
         }
     }
 
+    @TargetApi(21)
+    private static final class Lollipop {
+        static void blackNavigationBar(Activity a) {
+            a.getWindow().setNavigationBarColor(0xFF000000);
+        }
+    }
+
     @TargetApi(33)
     private static final class Permissions {
         static void askNotifications(Activity a) {
@@ -487,7 +503,7 @@ public final class MainActivity extends Activity implements PlayerService.Listen
             miniShownId = s.videoId;
             miniTitle.setText(s.title);
             miniArtist.setText(s.artist);
-            Images.get(this).load(miniArt, s.thumb, 120, Ui.attrResource(this, R.attr.ytmPlaceholder));
+            Images.get(this).load(miniArt, s.thumb, Images.get(this).px(44, 300), Ui.attrResource(this, R.attr.ytmPlaceholder));
         }
         miniToggle.setImageResource(player.wantsToPlay() ? R.drawable.ic_pause : R.drawable.ic_play);
         showMiniLoading(player.isLoading());

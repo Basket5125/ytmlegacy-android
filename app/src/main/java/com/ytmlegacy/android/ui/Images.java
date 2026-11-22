@@ -32,6 +32,12 @@ public final class Images {
     private static Images instance;
 
     private final File dir;
+    private final android.content.Context context;
+    private final float density;
+    private float factor = 1f;
+    private long factorAt;
+    /** Thumbnail URLs YouTube answered 404 for (not every video has every size). */
+    private final java.util.Set<String> missing = java.util.Collections.synchronizedSet(new java.util.HashSet<String>());
     private final Handler main = new Handler(Looper.getMainLooper());
     private final long memoryLimit;
     private long memoryUsed;
@@ -40,6 +46,8 @@ public final class Images {
     private final ExecutorService pool;
 
     private Images(Context context) {
+        this.context = context;
+        density = context.getResources().getDisplayMetrics().density;
         dir = new File(context.getCacheDir(), "img");
         dir.mkdirs();
         long max = Runtime.getRuntime().maxMemory();
@@ -55,6 +63,36 @@ public final class Images {
     public static synchronized Images get(Context context) {
         if (instance == null) instance = new Images(context.getApplicationContext());
         return instance;
+    }
+
+    /**
+     * Pixels to request for an image shown {@code dp} wide, by the quality chosen for the
+     * current network (Wi-Fi or mobile data), at most {@code max}.
+     */
+    public int px(float dp, int max) {
+        long now = System.currentTimeMillis();
+        if (now - factorAt > 3000) {
+            factorAt = now;
+            com.ytmlegacy.android.data.Prefs prefs = com.ytmlegacy.android.data.Prefs.get(context);
+            int q = onWifi() ? prefs.imageQualityWifi() : prefs.imageQualityMobile();
+            factor = com.ytmlegacy.android.data.Prefs.IMAGE_FACTORS[Math.max(0, Math.min(3, q))];
+        }
+        return Math.max(48, Math.min(max, (int) (dp * density * factor)));
+    }
+
+    @SuppressWarnings("deprecation")
+    private boolean onWifi() {
+        android.net.ConnectivityManager cm = (android.net.ConnectivityManager)
+                context.getSystemService(android.content.Context.CONNECTIVITY_SERVICE);
+        android.net.NetworkInfo n = cm == null ? null : cm.getActiveNetworkInfo();
+        return n == null || n.getType() != android.net.ConnectivityManager.TYPE_MOBILE;
+    }
+
+    /** Smaller stand-ins for a YouTube video thumbnail that may not exist in this size. */
+    private static String smallerVideoThumb(String url) {
+        if (url.endsWith("/maxresdefault.jpg")) return url.replace("/maxresdefault.jpg", "/sddefault.jpg");
+        if (url.endsWith("/sddefault.jpg")) return url.replace("/sddefault.jpg", "/hqdefault.jpg");
+        return null;
     }
 
     /** The URL of the image at about {@code px} pixels. */
@@ -73,7 +111,8 @@ public final class Images {
             String base = q < 0 ? url : url.substring(0, q);
             base = base.replace("/vi_webp/", "/vi/").replace(".webp", ".jpg");
             int last = base.lastIndexOf('/');
-            String file = px <= 200 ? "mqdefault.jpg" : "hqdefault.jpg";
+            String file = px <= 200 ? "mqdefault.jpg" : px <= 480 ? "hqdefault.jpg"
+                    : px <= 640 ? "sddefault.jpg" : "maxresdefault.jpg";
             return last > 0 ? base.substring(0, last + 1) + file : base;
         }
         return url;
@@ -127,7 +166,20 @@ public final class Images {
         File file = new File(dir, hash(sized));
         try {
             if (!file.exists()) {
-                byte[] data = Http.get(sized, null, 8000, 15000, 4 * 1024 * 1024);
+                String smallerFirst = missing.contains(sized) ? smallerVideoThumb(sized) : null;
+                if (smallerFirst != null) return loadSync(smallerFirst, px);
+                byte[] data;
+                try {
+                    data = Http.get(sized, null, 8000, 15000, 4 * 1024 * 1024);
+                } catch (Http.StatusException e) {
+                    // Not every video has its large thumbnails: step down a size.
+                    String smaller = e.status == 404 ? smallerVideoThumb(sized) : null;
+                    if (smaller == null) throw e;
+                    missing.add(sized);
+                    Bitmap fallback = loadSync(smaller, px);
+                    if (fallback != null) toMemory(key, fallback);
+                    return fallback;
+                }
                 File tmp = new File(file.getPath() + ".tmp");
                 FileOutputStream out = new FileOutputStream(tmp);
                 try {
@@ -165,7 +217,7 @@ public final class Images {
         while (bounds.outWidth / (sample * 2) >= px && bounds.outHeight / (sample * 2) >= px) sample *= 2;
         BitmapFactory.Options o = new BitmapFactory.Options();
         o.inSampleSize = sample;
-        o.inPreferredConfig = px <= 256 ? Bitmap.Config.RGB_565 : Bitmap.Config.ARGB_8888;
+        o.inPreferredConfig = px <= 400 ? Bitmap.Config.RGB_565 : Bitmap.Config.ARGB_8888;
         Bitmap b = BitmapFactory.decodeFile(file.getPath(), o);
         if (b == null && deleteBroken) file.delete();
         return b;

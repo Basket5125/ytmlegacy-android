@@ -30,6 +30,10 @@
     <color name="light_icon">#FF3B444C</color>
     <color name="light_track">#FFC7CED4</color>
 
+    <color name="oled_bg">#FF000000</color>
+    <color name="oled_card">#FF0E0F10</color>
+    <color name="oled_divider">#FF1C1F22</color>
+
     <color name="np_bg_top">#FF15212B</color>
     <color name="np_bg_bottom">#FF0B0E11</color>
     <color name="placeholder_dark">#FF2A3036</color>

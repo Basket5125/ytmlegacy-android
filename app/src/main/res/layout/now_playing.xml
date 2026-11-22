@@ -116,15 +116,14 @@
                     android:textSize="12sp" />
             </LinearLayout>
 
-            <ListView
+            <com.ytmlegacy.android.ui.DragSortListView
                 android:id="@+id/np_queue_list"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="1"
                 android:cacheColorHint="#00000000"
                 android:divider="#22FFFFFF"
-                android:dividerHeight="1px"
-                android:fastScrollEnabled="true" />
+                android:dividerHeight="1px" />
         </LinearLayout>
     </FrameLayout>
 
@@ -225,6 +224,7 @@
     </LinearLayout>
 
     <LinearLayout
+        android:id="@+id/np_volume_row"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center_vertical"

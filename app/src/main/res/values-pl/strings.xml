@@ -204,4 +204,12 @@
     <string name="menu_exit">Zakończ</string>
     <string name="menu_refresh">Odśwież</string>
     <string name="menu_options">Opcje</string>
+    <string name="theme_oled">OLED (czysta czerń)</string>
+    <string name="set_img_wifi">Jakość okładek w Wi-Fi</string>
+    <string name="set_img_mobile">Jakość okładek w sieci komórkowej</string>
+    <string name="img_low">Niska (oszczędza dane)</string>
+    <string name="img_normal">Normalna</string>
+    <string name="img_high">Wysoka</string>
+    <string name="img_max">Maksymalna</string>
+    <string name="move">Przesuń</string>
 </resources>

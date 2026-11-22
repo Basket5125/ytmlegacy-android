@@ -249,14 +249,32 @@ public final class SettingsScreen extends Screen {
                     }
                 });
         boolean systemTheme = Build.VERSION.SDK_INT >= 29;
+        // Indexes are the Prefs.THEME_* values.
         String[] themes = {act.getString(R.string.theme_dark), act.getString(R.string.theme_light),
-                act.getString(R.string.theme_system)};
+                act.getString(R.string.theme_system), act.getString(R.string.theme_oled)};
         choice(act.getString(R.string.set_theme), themes, prefs.theme(), systemTheme ? null : new int[]{2},
                 act.getString(R.string.requires_android, "10"), null, new Chosen() {
                     public void chosen(int i) {
                         if (i == prefs.theme()) return;
                         prefs.setTheme(i);
                         act.restart();
+                    }
+                });
+        String[] imageQ = {act.getString(R.string.img_low), act.getString(R.string.img_normal),
+                act.getString(R.string.img_high), act.getString(R.string.img_max)};
+        choice(act.getString(R.string.set_img_wifi), imageQ, prefs.imageQualityWifi(), null, null, null, new Chosen() {
+            public void chosen(int i) {
+                prefs.setImageQualityWifi(i);
+                Images.get(act).clearMemory();
+                build();
+            }
+        });
+        choice(act.getString(R.string.set_img_mobile), imageQ, prefs.imageQualityMobile(), null, null, null,
+                new Chosen() {
+                    public void chosen(int i) {
+                        prefs.setImageQualityMobile(i);
+                        Images.get(act).clearMemory();
+                        build();
                     }
                 });
         String[] tabs = {act.getString(R.string.tab_home), act.getString(R.string.tab_explore),
